@@ -184,44 +184,44 @@ QDialog {
 def get_dark_colors():
     """Get dark theme color palette"""
     return {
-        'bg_primary': '#0F1115',
-        'bg_secondary': '#1C1F26',
-        'bg_tertiary': '#20232B',
-        'border': '#2A2D35',
-        'border_hover': '#4FD1C5',
-        'text_primary': '#E4E6EB',
-        'text_secondary': '#9AA0A6',
-        'text_tertiary': '#6B6E76',
-        'accent_primary': '#4FD1C5',
-        'accent_secondary': '#7C83FD',
-        'success': '#6FCF97',
-        'warning': '#F2C94C',
-        'danger': '#EF5350',
+        "bg_primary": "#0F1115",
+        "bg_secondary": "#1C1F26",
+        "bg_tertiary": "#20232B",
+        "border": "#2A2D35",
+        "border_hover": "#4FD1C5",
+        "text_primary": "#E4E6EB",
+        "text_secondary": "#9AA0A6",
+        "text_tertiary": "#6B6E76",
+        "accent_primary": "#4FD1C5",
+        "accent_secondary": "#7C83FD",
+        "success": "#6FCF97",
+        "warning": "#F2C94C",
+        "danger": "#EF5350",
     }
 
 
 def get_light_colors():
     """Get light theme color palette"""
     return {
-        'bg_primary': '#F5F6FA',
-        'bg_secondary': '#FFFFFF',
-        'bg_tertiary': '#F8F9FA',
-        'border': '#E0E0E0',
-        'border_hover': '#4FD1C5',
-        'text_primary': '#2C3E50',
-        'text_secondary': '#7F8C8D',
-        'text_tertiary': '#95A5A6',
-        'accent_primary': '#4FD1C5',
-        'accent_secondary': '#7C83FD',
-        'success': '#27AE60',
-        'warning': '#F39C12',
-        'danger': '#E74C3C',
+        "bg_primary": "#F5F6FA",
+        "bg_secondary": "#FFFFFF",
+        "bg_tertiary": "#F8F9FA",
+        "border": "#E0E0E0",
+        "border_hover": "#4FD1C5",
+        "text_primary": "#2C3E50",
+        "text_secondary": "#7F8C8D",
+        "text_tertiary": "#95A5A6",
+        "accent_primary": "#4FD1C5",
+        "accent_secondary": "#7C83FD",
+        "success": "#27AE60",
+        "warning": "#F39C12",
+        "danger": "#E74C3C",
     }
 
 
 def apply_theme(widget, theme_name):
     """Apply theme to a widget"""
-    if theme_name == 'light':
+    if theme_name == "light":
         widget.setStyleSheet(LIGHT_THEME)
     else:
         widget.setStyleSheet(DARK_THEME)

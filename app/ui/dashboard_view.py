@@ -3,11 +3,25 @@ Premium Dashboard View - ALL ISSUES FIXED
 """
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-    QPushButton, QFrame, QScrollArea, QGraphicsDropShadowEffect
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QFrame,
+    QScrollArea,
+    QGraphicsDropShadowEffect,
 )
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRectF
-from PySide6.QtGui import QFont, QCursor, QPainter, QColor, QPen, QLinearGradient, QRadialGradient
+from PySide6.QtGui import (
+    QFont,
+    QCursor,
+    QPainter,
+    QColor,
+    QPen,
+    QLinearGradient,
+    QRadialGradient,
+)
 from datetime import datetime, timedelta
 from app.services.habit_service import get_habit_service
 from app.services.streak_service import get_streak_service
@@ -32,19 +46,10 @@ class SimpleCircularProgress(QWidget):
         center_y = self.height() // 2
         radius = 85
 
-        rect = QRectF(
-            center_x - radius,
-            center_y - radius,
-            radius * 2,
-            radius * 2
-        )
+        rect = QRectF(center_x - radius, center_y - radius, radius * 2, radius * 2)
 
         # top inner shadow
-        top_shadow = QRadialGradient(
-            center_x,
-            center_y - 25,
-            radius + 20
-        )
+        top_shadow = QRadialGradient(center_x, center_y - 25, radius + 20)
         top_shadow.setColorAt(0.7, QColor(0, 0, 0, 0))
         top_shadow.setColorAt(1, QColor(0, 0, 0, 40))
 
@@ -59,14 +64,10 @@ class SimpleCircularProgress(QWidget):
         painter.setBrush(Qt.NoBrush)
         painter.drawArc(rect, 0, 360 * 16)
 
-
         # Gradient Progress Arc
         if self.percentage > 0:
             gradient = QLinearGradient(
-                center_x - radius,
-                center_y,
-                center_x + radius,
-                center_y
+                center_x - radius, center_y, center_x + radius, center_y
             )
             gradient.setColorAt(0, QColor("#667eea"))
             gradient.setColorAt(0.5, QColor("#764ba2"))
@@ -80,18 +81,13 @@ class SimpleCircularProgress(QWidget):
             painter.drawArc(rect, 90 * 16, span_angle)
 
         # Soft inner highlight
-        highlight = QRadialGradient(
-            center_x,
-            center_y - 30,
-            radius
-        )
+        highlight = QRadialGradient(center_x, center_y - 30, radius)
         highlight.setColorAt(0, QColor(255, 255, 255, 60))
         highlight.setColorAt(1, QColor(255, 255, 255, 0))
 
         painter.setBrush(highlight)
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(rect.adjusted(18, 18, -18, -18))
-
 
         # Percentage Text
         painter.setPen(QColor("#111827"))
@@ -115,7 +111,6 @@ class HabitCard(QFrame):
         self.setObjectName("habitCard")
         self.setFixedHeight(92)
         self.setCursor(Qt.PointingHandCursor)
-        
 
         self.setup_ui()
         self.apply_shadow()
@@ -137,7 +132,7 @@ class HabitCard(QFrame):
         layout.setContentsMargins(20, 14, 20, 14)
         layout.setSpacing(14)
 
-        # Text Section 
+        # Text Section
         text_layout = QVBoxLayout()
         text_layout.setSpacing(4)
 
@@ -154,7 +149,7 @@ class HabitCard(QFrame):
         layout.addLayout(text_layout)
         layout.addStretch()
 
-        # Button 
+        # Button
         self.button = QPushButton()
         self.button.setFixedHeight(36)
         self.button.setMinimumWidth(130)
@@ -226,7 +221,6 @@ class HabitCard(QFrame):
             self.fade_animation.setEndValue(0.7)
             self.fade_animation.start()
 
-
             if self.parent_view and hasattr(self.parent_view, "load_dashboard"):
                 self.parent_view.load_dashboard()
 
@@ -279,6 +273,7 @@ class HabitCard(QFrame):
         }
         """
 
+
 class WeekDayCard(QWidget):
     """Weekly Activity Card - Brand Gradient Version"""
 
@@ -327,7 +322,6 @@ class WeekDayCard(QWidget):
         card_layout.setSpacing(12)
         card_layout.setAlignment(Qt.AlignCenter)
 
-
         # Percentage
         percent_label = QLabel(f"{percentage}%")
         percent_label.setFont(QFont("SF Pro Display", 32, QFont.Bold))
@@ -355,12 +349,7 @@ class WeekDayCard(QWidget):
             """)
 
         progress_fill = QFrame(progress_bg)
-        progress_fill.setGeometry(
-            0,
-            0,
-            int((percentage / 100) * 85),
-            6
-        )
+        progress_fill.setGeometry(0, 0, int((percentage / 100) * 85), 6)
 
         progress_fill.setStyleSheet("""
             QFrame {
@@ -380,7 +369,7 @@ class WeekDayCard(QWidget):
         day_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(day_label)
 
-                # Date Number
+        # Date Number
         date_label = QLabel(str(day_number))
         date_label.setFont(QFont("SF Pro Display", 22, QFont.Bold))
         date_label.setStyleSheet(f"color: {text_color}; background: transparent;")
@@ -397,7 +386,7 @@ class WeekDayCard(QWidget):
 
 class ModernDashboard(QWidget):
     """Fixed premium dashboard - ALL ISSUES RESOLVED"""
-    
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.main_window = parent
@@ -405,47 +394,51 @@ class ModernDashboard(QWidget):
         self.streak_service = get_streak_service()
         self.setup_ui()
         self.load_dashboard()
-    
+
     def setup_ui(self):
         """Setup dashboard UI"""
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
+
         # Top navbar
         navbar = QFrame()
         navbar.setFixedHeight(85)
         navbar.setStyleSheet("QFrame { background-color: #FFFFFF; border: none; }")
-        
+
         navbar_layout = QHBoxLayout(navbar)
         navbar_layout.setContentsMargins(36, 0, 36, 0)
-        
+
         # Greeting
         greeting_layout = QVBoxLayout()
         greeting_layout.setSpacing(4)
-        
+
         hour = datetime.now().hour
-        greeting = "Good morning" if hour < 12 else "Good afternoon" if hour < 18 else "Good evening"
-        
+        greeting = (
+            "Good morning"
+            if hour < 12
+            else "Good afternoon" if hour < 18 else "Good evening"
+        )
+
         greeting_label = QLabel(f"{greeting}, Alex")
         greeting_label.setFont(QFont("SF Pro Display", 30, QFont.Bold))
         greeting_label.setStyleSheet("color: #111827;")
         greeting_layout.addWidget(greeting_label)
-        
+
         today = datetime.now()
         # date_str = today.strftime("%A, %B %dth")
         date_str = today.strftime(f"%A, %B {self._ordinal(today.day)}")
 
-
-        
-        date_label = QLabel(f'{date_str} • "Success is the sum of small efforts, repeated day in and day out."')
+        date_label = QLabel(
+            f'{date_str} • "Success is the sum of small efforts, repeated day in and day out."'
+        )
         date_label.setFont(QFont("SF Pro Text", 13))
         date_label.setStyleSheet("color: #6B7280;")
         greeting_layout.addWidget(date_label)
-        
+
         navbar_layout.addLayout(greeting_layout)
         navbar_layout.addStretch()
-        
+
         # Notification
         notif_btn = QPushButton("🔔")
         notif_btn.setFont(QFont("SF Pro Display", 20))
@@ -462,7 +455,7 @@ class ModernDashboard(QWidget):
             }
         """)
         navbar_layout.addWidget(notif_btn)
-        
+
         # New Habit button
         new_btn = QPushButton("+ New Habit")
         new_btn.setFont(QFont("SF Pro Text", 15, QFont.Bold))
@@ -484,9 +477,9 @@ class ModernDashboard(QWidget):
         """)
         new_btn.clicked.connect(self.show_add_habit)
         navbar_layout.addWidget(new_btn)
-        
+
         main_layout.addWidget(navbar)
-        
+
         # Dashboard content
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -497,16 +490,16 @@ class ModernDashboard(QWidget):
                 background-color: #F9FAFB;
             }
         """)
-        
+
         content = QWidget()
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(36, 28, 36, 28)
         content_layout.setSpacing(24)
-        
+
         # Top row
         top_row = QHBoxLayout()
         top_row.setSpacing(24)
-        
+
         # Daily Completion
         daily_card = QFrame()
         daily_card.setFixedWidth(380)
@@ -521,24 +514,24 @@ class ModernDashboard(QWidget):
         daily_layout = QVBoxLayout(daily_card)
         daily_layout.setContentsMargins(30, 28, 30, 28)
         daily_layout.setSpacing(20)
-        
+
         daily_title = QLabel("Daily Completion")
         daily_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
         daily_title.setStyleSheet("color: #111827;")
         daily_layout.addWidget(daily_title)
-        
+
         self.circular_progress = SimpleCircularProgress(0)
         daily_layout.addWidget(self.circular_progress, alignment=Qt.AlignCenter)
-        
+
         self.progress_text = QLabel("Loading...")
         self.progress_text.setFont(QFont("SF Pro Text", 15))
         self.progress_text.setStyleSheet("color: #6B7280;")
         self.progress_text.setAlignment(Qt.AlignCenter)
         self.progress_text.setWordWrap(True)
         daily_layout.addWidget(self.progress_text)
-        
+
         top_row.addWidget(daily_card)
-        
+
         # Today's Habits
         habits_card = QFrame()
         habits_card.setObjectName("todayCard")
@@ -554,18 +547,18 @@ class ModernDashboard(QWidget):
         habits_layout = QVBoxLayout(habits_card)
         habits_layout.setContentsMargins(30, 28, 30, 28)
         habits_layout.setSpacing(16)
-        
+
         habits_header = QHBoxLayout()
-        habits_header.setContentsMargins(26, 0 , 26,  0)
+        habits_header.setContentsMargins(26, 0, 26, 0)
         habits_header.setSpacing(15)
-        
+
         habits_title = QLabel("Today's Habits")
         habits_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
         habits_title.setStyleSheet("background-color: transparent; color: #111827;")
         habits_header.addWidget(habits_title)
-        
+
         habits_header.addStretch()
-        
+
         self.habits_count = QLabel("0")
         self.habits_count.setFont(QFont("SF Pro Display", 15, QFont.Bold))
         self.habits_count.setStyleSheet("""
@@ -577,7 +570,7 @@ class ModernDashboard(QWidget):
                 padding: 6px 16px;
             }
         """)
-    
+
         habits_layout.addLayout(habits_header)
         habits_layout.addSpacing(10)
 
@@ -614,7 +607,7 @@ class ModernDashboard(QWidget):
                 border-radius: 16px;
             }
         """)
-       
+
         # APPLY UPWARD SHADOW
         shadow = QGraphicsDropShadowEffect()
         shadow.setBlurRadius(20)
@@ -627,24 +620,24 @@ class ModernDashboard(QWidget):
         inner_layout.addWidget(habits_scroll)
 
         habits_layout.addWidget(habit_list_container)
-        
+
         habits_container = QWidget()
         habits_container.setStyleSheet("background: transparent;")
         self.habits_list = QVBoxLayout(habits_container)
         self.habits_list.setSpacing(16)
         self.habits_list.setContentsMargins(12, 12, 12, 12)
         self.habits_list.setAlignment(Qt.AlignTop)
-        
+
         habits_scroll.setWidget(habits_container)
-        
+
         top_row.addWidget(habits_card, stretch=1)
-        
+
         content_layout.addLayout(top_row)
-        
+
         # Bottom row
         bottom_row = QHBoxLayout()
         bottom_row.setSpacing(24)
-        
+
         # Weekly Activity
         weekly_card = QFrame()
         weekly_card.setStyleSheet("""
@@ -653,35 +646,35 @@ class ModernDashboard(QWidget):
                 border-radius: 20px;
             }
         """)
-        
+
         weekly_layout = QVBoxLayout(weekly_card)
         weekly_layout.setContentsMargins(30, 28, 30, 28)
         weekly_layout.setSpacing(20)
-        
+
         weekly_header = QHBoxLayout()
-        
+
         weekly_title = QLabel("Weekly Activity")
         weekly_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
         weekly_title.setStyleSheet("color: #111827;")
         weekly_header.addWidget(weekly_title)
-        
+
         weekly_header.addStretch()
-        
+
         weekly_subtitle = QLabel("Last 7 Days")
         weekly_subtitle.setFont(QFont("SF Pro Text", 13))
         weekly_subtitle.setStyleSheet("color: #6B7280;")
         weekly_header.addWidget(weekly_subtitle)
-        
+
         weekly_layout.addLayout(weekly_header)
-        
+
         self.week_grid = QHBoxLayout()
         self.week_grid.setSpacing(12)
         weekly_layout.addLayout(self.week_grid)
-        
+
         weekly_layout.addStretch()
-        
+
         bottom_row.addWidget(weekly_card, stretch=2)
-        
+
         # Monthly Milestone
         milestone_card = QFrame()
         milestone_card.setFixedHeight(310)
@@ -693,16 +686,16 @@ class ModernDashboard(QWidget):
                 border-radius: 20px;
             }
         """)
-        
+
         milestone_layout = QVBoxLayout(milestone_card)
         milestone_layout.setContentsMargins(30, 28, 30, 32)
         milestone_layout.setSpacing(20)
-        
+
         milestone_title = QLabel("Monthly Milestone")
         milestone_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
         milestone_title.setStyleSheet("color: #92400E;")
         milestone_layout.addWidget(milestone_title)
-        
+
         flame_container = QFrame()
         flame_container.setFixedSize(130, 130)
         flame_container.setStyleSheet("""
@@ -713,36 +706,36 @@ class ModernDashboard(QWidget):
                 border-radius: 65px;
             }
         """)
-        
+
         flame_layout = QVBoxLayout(flame_container)
         flame_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         flame_icon = QLabel("🔥")
         flame_icon.setFont(QFont("SF Pro Display", 62))
         flame_icon.setAlignment(Qt.AlignCenter)
         flame_layout.addWidget(flame_icon)
-        
+
         milestone_layout.addWidget(flame_container, alignment=Qt.AlignCenter)
-        
+
         self.streak_label = QLabel("0 Day Streak!")
         self.streak_label.setFont(QFont("SF Pro Display", 34, QFont.Bold))
         self.streak_label.setStyleSheet("color: #92400E;")
         self.streak_label.setAlignment(Qt.AlignCenter)
         milestone_layout.addWidget(self.streak_label)
-        
+
         milestone_desc = QLabel("Keep building your habits!")
         milestone_desc.setFont(QFont("SF Pro Text", 14))
         milestone_desc.setStyleSheet("color: #B45309;")
         milestone_desc.setAlignment(Qt.AlignCenter)
         milestone_layout.addWidget(milestone_desc)
-        
+
         bottom_row.addWidget(milestone_card)
-        
+
         content_layout.addLayout(bottom_row)
-        
+
         scroll.setWidget(content)
         main_layout.addWidget(scroll)
-    
+
     def _ordinal(self, n):
         if 11 <= n % 100 <= 13:
             return f"{n}th"
@@ -751,7 +744,7 @@ class ModernDashboard(QWidget):
     def show_add_habit(self):
         if self.main_window:
             self.main_window.show_add_habit_dialog()
-    
+
     def load_dashboard(self):
         """Load all dashboard data"""
 
@@ -820,7 +813,7 @@ class ModernDashboard(QWidget):
         max_streak = 0
         for habit in habits:
             streak_info = self.streak_service.get_streak_info(habit.id)
-            current = streak_info.get('current_streak', 0)
+            current = streak_info.get("current_streak", 0)
             max_streak = max(max_streak, current)
 
         self.streak_label.setText(f"{max_streak} Day Streak!")
@@ -828,31 +821,34 @@ class ModernDashboard(QWidget):
         # Load weekly activity
         self.load_weekly_activity()
 
-
     def load_weekly_activity(self):
         """Load weekly activity graph"""
         while self.week_grid.count():
             item = self.week_grid.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        
+
         habits = self.habit_service.get_all_habits()
         today = datetime.now()
-        days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
-        
+        days = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+
         for i in range(7):
-            date = today - timedelta(days=6-i)
+            date = today - timedelta(days=6 - i)
             date_str = date.strftime("%Y-%m-%d")
             day_name = days[date.weekday()]
-            
+
             completed_count = 0
             if habits:
                 for habit in habits:
-                    if self.habit_service.is_habit_completed_on_date(habit.id, date_str):
+                    if self.habit_service.is_habit_completed_on_date(
+                        habit.id, date_str
+                    ):
                         completed_count += 1
-            
-            percentage = int((completed_count / len(habits)) * 100) if len(habits) > 0 else 0
-            
+
+            percentage = (
+                int((completed_count / len(habits)) * 100) if len(habits) > 0 else 0
+            )
+
             day_card = WeekDayCard(day_name, percentage, date.day)
             self.week_grid.addWidget(day_card)
 
@@ -862,4 +858,3 @@ class ModernDashboard(QWidget):
         shadow.setColor(QColor(0, 0, 0, 40))
         shadow.setOffset(0, 8)
         widget.setGraphicsEffect(shadow)
-

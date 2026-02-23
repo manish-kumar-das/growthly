@@ -63,7 +63,7 @@ required_files = [
     "app/db/database.py",
     "app/models/habit.py",
     "app/assets/styles/theme.qss",
-    "docs/roadmap.md"
+    "docs/roadmap.md",
 ]
 
 missing_files = []

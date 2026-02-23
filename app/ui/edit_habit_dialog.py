@@ -3,8 +3,15 @@ Edit habit dialog with category support
 """
 
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-    QLineEdit, QTextEdit, QComboBox, QPushButton, QMessageBox
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QTextEdit,
+    QComboBox,
+    QPushButton,
+    QMessageBox,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -14,13 +21,13 @@ from app.utils.constants import FREQUENCY_DAILY, FREQUENCY_WEEKLY, CATEGORIES
 
 class EditHabitDialog(QDialog):
     """Dialog for editing an existing habit"""
-    
+
     def __init__(self, habit, parent=None):
         super().__init__(parent)
         self.habit = habit
         self.habit_service = get_habit_service()
         self.setup_ui()
-    
+
     def setup_ui(self):
         """Setup the dialog UI"""
         self.setWindowTitle("Edit Habit")
@@ -31,28 +38,32 @@ class EditHabitDialog(QDialog):
                 background-color: #1C1F26;
             }
         """)
-        
+
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(32, 32, 32, 32)
-        
+
         # Title
         title = QLabel("Edit Habit")
         title.setFont(QFont("Inter", 24, QFont.Bold))
         title.setStyleSheet("color: #E4E6EB; background: transparent;")
         layout.addWidget(title)
-        
+
         subtitle = QLabel("Update your habit details")
         subtitle.setFont(QFont("Inter", 13))
-        subtitle.setStyleSheet("color: #9AA0A6; background: transparent; margin-bottom: 8px;")
+        subtitle.setStyleSheet(
+            "color: #9AA0A6; background: transparent; margin-bottom: 8px;"
+        )
         layout.addWidget(subtitle)
-        
+
         # Habit name
         name_label = QLabel("Habit Name")
         name_label.setFont(QFont("Inter", 13, QFont.Medium))
-        name_label.setStyleSheet("color: #E4E6EB; background: transparent; margin-top: 8px;")
+        name_label.setStyleSheet(
+            "color: #E4E6EB; background: transparent; margin-top: 8px;"
+        )
         layout.addWidget(name_label)
-        
+
         self.name_input = QLineEdit()
         self.name_input.setText(self.habit.name)
         self.name_input.setFont(QFont("Inter", 14))
@@ -72,13 +83,15 @@ class EditHabitDialog(QDialog):
             }
         """)
         layout.addWidget(self.name_input)
-        
+
         # Category
         category_label = QLabel("Category")
         category_label.setFont(QFont("Inter", 13, QFont.Medium))
-        category_label.setStyleSheet("color: #E4E6EB; background: transparent; margin-top: 8px;")
+        category_label.setStyleSheet(
+            "color: #E4E6EB; background: transparent; margin-top: 8px;"
+        )
         layout.addWidget(category_label)
-        
+
         self.category_combo = QComboBox()
         current_index = 0
         for i, (category_name, emoji) in enumerate(CATEGORIES):
@@ -122,13 +135,15 @@ class EditHabitDialog(QDialog):
             }
         """)
         layout.addWidget(self.category_combo)
-        
+
         # Description
         desc_label = QLabel("Description (Optional)")
         desc_label.setFont(QFont("Inter", 13, QFont.Medium))
-        desc_label.setStyleSheet("color: #E4E6EB; background: transparent; margin-top: 8px;")
+        desc_label.setStyleSheet(
+            "color: #E4E6EB; background: transparent; margin-top: 8px;"
+        )
         layout.addWidget(desc_label)
-        
+
         self.desc_input = QTextEdit()
         self.desc_input.setText(self.habit.description or "")
         self.desc_input.setFont(QFont("Inter", 13))
@@ -148,22 +163,24 @@ class EditHabitDialog(QDialog):
             }
         """)
         layout.addWidget(self.desc_input)
-        
+
         # Frequency
         freq_label = QLabel("Frequency")
         freq_label.setFont(QFont("Inter", 13, QFont.Medium))
-        freq_label.setStyleSheet("color: #E4E6EB; background: transparent; margin-top: 8px;")
+        freq_label.setStyleSheet(
+            "color: #E4E6EB; background: transparent; margin-top: 8px;"
+        )
         layout.addWidget(freq_label)
-        
+
         self.frequency_combo = QComboBox()
         self.frequency_combo.addItem("📅 Daily", FREQUENCY_DAILY)
         self.frequency_combo.addItem("📆 Weekly", FREQUENCY_WEEKLY)
-        
+
         if self.habit.frequency == FREQUENCY_WEEKLY:
             self.frequency_combo.setCurrentIndex(1)
         else:
             self.frequency_combo.setCurrentIndex(0)
-        
+
         self.frequency_combo.setFont(QFont("Inter", 13))
         self.frequency_combo.setFixedHeight(48)
         self.frequency_combo.setCursor(Qt.PointingHandCursor)
@@ -200,13 +217,13 @@ class EditHabitDialog(QDialog):
             }
         """)
         layout.addWidget(self.frequency_combo)
-        
+
         layout.addSpacing(12)
-        
+
         # Buttons
         button_layout = QHBoxLayout()
         button_layout.setSpacing(12)
-        
+
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setFont(QFont("Inter", 13, QFont.Medium))
         cancel_btn.setFixedHeight(48)
@@ -227,7 +244,7 @@ class EditHabitDialog(QDialog):
         """)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
-        
+
         save_btn = QPushButton("Save Changes")
         save_btn.setFont(QFont("Inter", 13, QFont.Bold))
         save_btn.setFixedHeight(48)
@@ -252,38 +269,40 @@ class EditHabitDialog(QDialog):
         """)
         save_btn.clicked.connect(self.save_habit)
         button_layout.addWidget(save_btn)
-        
+
         layout.addLayout(button_layout)
-    
+
     def save_habit(self):
         """Validate and save the habit changes"""
         name = self.name_input.text().strip()
         description = self.desc_input.toPlainText().strip()
         category = self.category_combo.currentData()
         frequency = self.frequency_combo.currentData()
-        
+
         if not name:
             self.show_error("Validation Error", "Please enter a habit name")
             self.name_input.setFocus()
             return
-        
+
         if len(name) > 100:
-            self.show_error("Validation Error", "Habit name is too long (max 100 characters)")
+            self.show_error(
+                "Validation Error", "Habit name is too long (max 100 characters)"
+            )
             self.name_input.setFocus()
             return
-        
+
         try:
             self.habit_service.update_habit(
                 self.habit.id,
                 name=name,
                 description=description,
                 category=category,
-                frequency=frequency
+                frequency=frequency,
             )
             self.accept()
         except Exception as e:
             self.show_error("Error", f"Failed to update habit:\n{str(e)}")
-    
+
     def show_error(self, title, message):
         """Show error message"""
         msg = QMessageBox(self)

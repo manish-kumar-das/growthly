@@ -39,6 +39,7 @@ print(f"\n🚀 Starting scheduler for 30 seconds...")
 scheduler = get_scheduler_service()
 
 from PySide6.QtCore import QTimer
+
 exit_timer = QTimer()
 exit_timer.timeout.connect(app.quit)
 exit_timer.start(30000)

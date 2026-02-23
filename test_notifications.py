@@ -16,8 +16,7 @@ settings.set_notifications_enabled(True)
 print("\n1. Testing basic notification...")
 notif = get_notification_service()
 notif.send_notification(
-    "Test Notification",
-    "This is a test notification from Habit Tracker!"
+    "Test Notification", "This is a test notification from Habit Tracker!"
 )
 print("✅ Basic notification sent")
 

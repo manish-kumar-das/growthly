@@ -2,9 +2,10 @@
 Database schema definitions - FIXED
 """
 
+
 def create_habits_table(cursor):
     """Create habits table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS habits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -13,20 +14,20 @@ def create_habits_table(cursor):
             frequency TEXT DEFAULT 'daily',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
-    
+    """)
+
     # Add category column if it doesn't exist
     try:
         cursor.execute('ALTER TABLE habits ADD COLUMN category TEXT DEFAULT "General"')
     except:
         pass
-    
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_habits_category ON habits(category)')
+
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_habits_category ON habits(category)")
 
 
 def create_habit_logs_table(cursor):
     """Create habit completion logs table - FIXED"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS habit_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             habit_id INTEGER NOT NULL,
@@ -36,26 +37,30 @@ def create_habit_logs_table(cursor):
             FOREIGN KEY (habit_id) REFERENCES habits (id) ON DELETE CASCADE,
             UNIQUE(habit_id, completed_date)
         )
-    ''')
-    
+    """)
+
     # Add notes column if it doesn't exist
     try:
-        cursor.execute('ALTER TABLE habit_logs ADD COLUMN notes TEXT')
+        cursor.execute("ALTER TABLE habit_logs ADD COLUMN notes TEXT")
     except:
         pass
-    
+
     # Add created_at if it doesn't exist
     try:
-        cursor.execute('ALTER TABLE habit_logs ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP')
+        cursor.execute(
+            "ALTER TABLE habit_logs ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP"
+        )
     except:
         pass
-    
-    cursor.execute('CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON habit_logs(completed_date)')
+
+    cursor.execute(
+        "CREATE INDEX IF NOT EXISTS idx_habit_logs_date ON habit_logs(completed_date)"
+    )
 
 
 def create_deleted_habits_table(cursor):
     """Create deleted habits table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS deleted_habits (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             original_habit_id INTEGER NOT NULL,
@@ -67,33 +72,35 @@ def create_deleted_habits_table(cursor):
             deleted_at TEXT DEFAULT CURRENT_TIMESTAMP,
             completion_count INTEGER DEFAULT 0
         )
-    ''')
+    """)
 
 
 def create_settings_table(cursor):
     """Create settings table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         )
-    ''')
-    
+    """)
+
     default_settings = [
-        ('theme', 'dark'),
-        ('notifications_enabled', 'true'),
-        ('notification_time', '09:00'),
-        ('show_completed', 'true'),
-        ('compact_mode', 'false')
+        ("theme", "dark"),
+        ("notifications_enabled", "true"),
+        ("notification_time", "09:00"),
+        ("show_completed", "true"),
+        ("compact_mode", "false"),
     ]
-    
+
     for key, value in default_settings:
-        cursor.execute('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', (key, value))
+        cursor.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", (key, value)
+        )
 
 
 def create_goals_table(cursor):
     """Create goals table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             habit_id INTEGER,
@@ -109,12 +116,12 @@ def create_goals_table(cursor):
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (habit_id) REFERENCES habits (id) ON DELETE CASCADE
         )
-    ''')
+    """)
 
 
 def create_achievements_table(cursor):
     """Create achievements table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS achievements (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -126,12 +133,12 @@ def create_achievements_table(cursor):
             unlocked_date TEXT,
             rarity TEXT NOT NULL
         )
-    ''')
+    """)
 
 
 def create_profile_table(cursor):
     """Create user profile table"""
-    cursor.execute('''
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_profile (
             id INTEGER PRIMARY KEY CHECK (id = 1),
             name TEXT DEFAULT 'Alex Morgan',
@@ -141,16 +148,17 @@ def create_profile_table(cursor):
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
-    
+    """)
+
     # Insert default profile if not exists
-    cursor.execute('SELECT COUNT(*) FROM user_profile')
+    cursor.execute("SELECT COUNT(*) FROM user_profile")
     if cursor.fetchone()[0] == 0:
-        cursor.execute('''
+        cursor.execute("""
             INSERT INTO user_profile (id, name, email, bio)
             VALUES (1, 'Alex Morgan', 'alex.morgan@example.com', 
                     'Building better habits, one day at a time! 🚀')
-        ''')
+        """)
+
 
 def create_tables(cursor):
     """Create all database tables"""

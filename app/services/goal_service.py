@@ -9,129 +9,159 @@ from app.models.goal import Goal
 
 class GoalService:
     """Service for goal operations"""
-    
+
     def __init__(self):
         pass
-    
-    def create_goal(self, habit_id, goal_type, target_value, description, deadline=None, category=None):
+
+    def create_goal(
+        self,
+        habit_id,
+        goal_type,
+        target_value,
+        description,
+        deadline=None,
+        category=None,
+    ):
         """Create a new goal"""
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         start_date = datetime.now().strftime("%Y-%m-%d")
-        
-        cursor.execute('''
+
+        cursor.execute(
+            """
             INSERT INTO goals (habit_id, goal_type, target_value, description,
                              start_date, deadline, category)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (habit_id, goal_type, target_value, description, 
-              start_date, deadline, category))
-        
+        """,
+            (
+                habit_id,
+                goal_type,
+                target_value,
+                description,
+                start_date,
+                deadline,
+                category,
+            ),
+        )
+
         goal_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        
+
         self.update_goal_progress(goal_id)
-        
+
         return goal_id
-    
+
     def get_all_goals(self, include_completed=True):
         """Get all goals"""
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         if include_completed:
-            cursor.execute('SELECT * FROM goals ORDER BY is_completed ASC, created_at DESC')
+            cursor.execute(
+                "SELECT * FROM goals ORDER BY is_completed ASC, created_at DESC"
+            )
         else:
-            cursor.execute('SELECT * FROM goals WHERE is_completed = 0 ORDER BY created_at DESC')
-        
+            cursor.execute(
+                "SELECT * FROM goals WHERE is_completed = 0 ORDER BY created_at DESC"
+            )
+
         rows = cursor.fetchall()
         conn.close()
-        
+
         return [Goal.from_db_row(row) for row in rows]
-    
+
     def get_goal_by_id(self, goal_id):
         """Get goal by ID"""
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('SELECT * FROM goals WHERE id = ?', (goal_id,))
+
+        cursor.execute("SELECT * FROM goals WHERE id = ?", (goal_id,))
         row = cursor.fetchone()
         conn.close()
-        
+
         return Goal.from_db_row(row) if row else None
-    
+
     def update_goal_progress(self, goal_id):
         """Update goal progress based on current data"""
         goal = self.get_goal_by_id(goal_id)
         if not goal:
             return
-        
+
         from app.services.habit_service import get_habit_service
         from app.services.streak_service import get_streak_service
-        
+
         habit_service = get_habit_service()
         streak_service = get_streak_service()
-        
+
         current_value = 0
-        
-        if goal.goal_type == 'streak' and goal.habit_id:
+
+        if goal.goal_type == "streak" and goal.habit_id:
             streak_info = streak_service.get_streak_info(goal.habit_id)
-            current_value = streak_info['current_streak']
-        elif goal.goal_type == 'total' and goal.habit_id:
+            current_value = streak_info["current_streak"]
+        elif goal.goal_type == "total" and goal.habit_id:
             completions = habit_service.get_habit_completions(goal.habit_id)
             current_value = len(completions)
-        elif goal.goal_type == 'consistency' and goal.habit_id:
+        elif goal.goal_type == "consistency" and goal.habit_id:
             from app.services.stats_service import get_stats_service
+
             stats = get_stats_service().get_habit_stats(goal.habit_id)
-            current_value = stats['completion_rate_30d']
-        
+            current_value = stats["completion_rate_30d"]
+
         is_completed = current_value >= goal.target_value
-        completed_date = datetime.now().strftime("%Y-%m-%d") if is_completed and not goal.is_completed else goal.completed_date
-        
+        completed_date = (
+            datetime.now().strftime("%Y-%m-%d")
+            if is_completed and not goal.is_completed
+            else goal.completed_date
+        )
+
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('''
+
+        cursor.execute(
+            """
             UPDATE goals 
             SET current_value = ?, is_completed = ?, completed_date = ?
             WHERE id = ?
-        ''', (current_value, 1 if is_completed else 0, completed_date, goal_id))
-        
+        """,
+            (current_value, 1 if is_completed else 0, completed_date, goal_id),
+        )
+
         conn.commit()
         conn.close()
-        
+
         return is_completed and not goal.is_completed
-    
+
     def update_all_goals_progress(self):
         """Update progress for all active goals"""
         goals = self.get_all_goals(include_completed=False)
         newly_completed = []
-        
+
         for goal in goals:
             if self.update_goal_progress(goal.id):
                 newly_completed.append(goal)
-        
+
         return newly_completed
-    
+
     def delete_goal(self, goal_id):
         """Delete a goal"""
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('DELETE FROM goals WHERE id = ?', (goal_id,))
-        
+
+        cursor.execute("DELETE FROM goals WHERE id = ?", (goal_id,))
+
         conn.commit()
         conn.close()
-    
+
     def get_completed_goals_count(self):
         """Get count of completed goals"""
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('SELECT COUNT(*) FROM goals WHERE is_completed = 1')
+
+        cursor.execute("SELECT COUNT(*) FROM goals WHERE is_completed = 1")
         count = cursor.fetchone()[0]
-        
+
         conn.close()
         return count
 

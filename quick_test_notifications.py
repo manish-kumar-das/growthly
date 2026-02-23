@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Quick notification test"""
+
 from app.services.notification_service import get_notification_service
 from app.services.settings_service import get_settings_service
 

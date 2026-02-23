@@ -22,13 +22,13 @@ def init_db():
     """Initialize database with schema"""
     conn = get_db_connection()
     cursor = conn.cursor()
-    
+
     # Create all tables
     create_tables(cursor)
-    
+
     conn.commit()
     conn.close()
-    
+
     print("✅ Database initialized successfully!")
 
 

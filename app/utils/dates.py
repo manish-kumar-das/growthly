@@ -10,7 +10,7 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def parse_date(date_string):
     """Parse date string - handles date, datetime, and string formats."""
-    
+
     if not date_string:
         return datetime.now().date()
 

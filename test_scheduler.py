@@ -39,7 +39,7 @@ print(f"   (This is 1 minute from now)")
 
 # Optionally set it automatically
 response = input("\nSet notification time automatically to 1 minute from now? (y/n): ")
-if response.lower() == 'y':
+if response.lower() == "y":
     settings.set_notification_time(test_time)
     print(f"✅ Notification time set to: {test_time}")
 
@@ -50,12 +50,14 @@ scheduler = get_scheduler_service()
 print("\n⏳ Waiting for reminder (press Ctrl+C to stop)...")
 print("📺 Watch for desktop notifications and console output...\n")
 
+
 # Create a timer to check status every 5 seconds
 def print_status():
     now = datetime.now()
     current_time = f"{now.hour:02d}:{now.minute:02d}"
     target_time = settings.get_notification_time()
     print(f"⏰ Current: {current_time} | Target: {target_time} | Waiting...")
+
 
 status_timer = QTimer()
 status_timer.timeout.connect(print_status)

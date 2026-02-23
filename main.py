@@ -20,14 +20,14 @@ def main():
     """Main application entry point"""
     # Initialize database
     init_db()
-    
+
     # Create application
     app = QApplication(sys.argv)
     app.setApplicationName("Habit Tracker")
-    
+
     # Set default font
     app.setFont(QFont("SF Pro Display", 11))
-    
+
     # Simple light theme for HabitHub UI
     app.setStyleSheet("""
         QWidget {
@@ -35,13 +35,13 @@ def main():
             color: #212529;
         }
     """)
-    
+
     # Create and show main window
     window = MainWindow()
-    
+
     # FULL SCREEN MODE
     window.showMaximized()
-    
+
     # Start event loop
     sys.exit(app.exec())
 
