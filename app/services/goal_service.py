@@ -1,5 +1,5 @@
 """
-Goal Service - Handles all goal-related operations
+Goal Service - Handles all goal-related operations - FULLY FIXED
 """
 
 from app.db.database import get_db_connection
@@ -19,7 +19,6 @@ class GoalService:
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            # Create goals table if not exists
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS goals (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,12 +35,20 @@ class GoalService:
             
             conn.commit()
             conn.close()
+            print("✅ Goals table ensured")
         except Exception as e:
-            print(f"Error ensuring goals table: {e}")
+            print(f"❌ Error ensuring goals table: {e}")
     
     def create_goal(self, habit_id, goal_type, target_value):
         """Create a new goal"""
         try:
+            if not habit_id:
+                return None
+            if not goal_type:
+                return None
+            if not target_value or target_value <= 0:
+                return None
+            
             conn = get_db_connection()
             cursor = conn.cursor()
             
@@ -58,12 +65,15 @@ class GoalService:
             conn.close()
             
             return goal_id
+            
         except Exception as e:
             print(f"Error creating goal: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def get_all_goals(self, include_completed=False):
-        """Get all goals"""
+        """Get all goals - FIXED"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -86,17 +96,19 @@ class GoalService:
                     current_value=row['current_value'],
                     is_completed=bool(row['is_completed']),
                     created_at=row['created_at'],
-                    completed_at=row['completed_at'] if 'completed_at' in row.keys() else None
+                    completed_at=row['completed_at'] if row['completed_at'] else None
                 )
                 goals.append(goal)
             
             return goals
         except Exception as e:
             print(f"Error getting goals: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def get_goal_by_id(self, goal_id):
-        """Get a specific goal by ID"""
+        """Get a specific goal by ID - FIXED"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -115,7 +127,7 @@ class GoalService:
                     current_value=row['current_value'],
                     is_completed=bool(row['is_completed']),
                     created_at=row['created_at'],
-                    completed_at=row['completed_at'] if 'completed_at' in row.keys() else None
+                    completed_at=row['completed_at'] if row['completed_at'] else None
                 )
             
             return None
@@ -124,7 +136,7 @@ class GoalService:
             return None
     
     def get_goals_by_habit(self, habit_id, include_completed=False):
-        """Get all goals for a specific habit"""
+        """Get all goals for a specific habit - FIXED"""
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -147,7 +159,7 @@ class GoalService:
                     current_value=row['current_value'],
                     is_completed=bool(row['is_completed']),
                     created_at=row['created_at'],
-                    completed_at=row['completed_at'] if 'completed_at' in row.keys() else None
+                    completed_at=row['completed_at'] if row['completed_at'] else None
                 )
                 goals.append(goal)
             
@@ -224,13 +236,11 @@ class GoalService:
             
             for goal in goals:
                 if 'streak' in goal.goal_type.lower():
-                    # Update streak goals
                     streak_info = streak_service.get_streak_info(habit_id)
                     current_streak = streak_info.get('current_streak', 0)
                     
                     self.update_goal_progress(goal.id, current_streak)
                     
-                    # Check if goal completed
                     if current_streak >= goal.target_value:
                         self.complete_goal(goal.id)
         except Exception as e:

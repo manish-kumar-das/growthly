@@ -6,7 +6,7 @@ Beautiful goal tracking with progress visualization
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QPushButton, QScrollArea, QFrame, QGraphicsDropShadowEffect,
-    QDialog, QComboBox, QSpinBox, QDialogButtonBox, QMessageBox
+    QDialog, QComboBox, QSpinBox, QDialogButtonBox, QMessageBox, QSizePolicy
 )
 from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint
 from PySide6.QtGui import QFont, QColor, QPainter, QPen, QLinearGradient
@@ -66,7 +66,7 @@ class GoalCard(QFrame):
         self.parent_view = parent
         self.goal_service = get_goal_service()
         self.setup_ui()
-        
+
         # Hover animation
         self.anim = QPropertyAnimation(self, b"pos")
         self.anim.setDuration(200)
@@ -75,23 +75,11 @@ class GoalCard(QFrame):
     def setup_ui(self):
         """Setup goal card UI"""
         self.setMinimumHeight(210)
-        self.setSizePolicy(QFrame.Expanding, QFrame.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # CORRECT
         
         # Calculate progress
-        # progress_percent = (self.goal.current_value / self.goal.target_value * 100) if self.goal.target_value > 0 else 0
         completions = getattr(self.habit, "completions", [])
         current_value = len(completions)
-
-        # progress_percent = (
-        #     current_value / self.goal.target_value * 100
-        #     if self.goal.target_value > 0 else 0
-        # )
-        
-        # Calculate progress dynamically from habit completions
-        # habit = self.habit_service.get_habit_by_id(self.goal.habit_id)
-
-        # completions = getattr(habit, "completions", [])
-        # current_value = len(completions)
 
         progress_percent = (
             current_value / self.goal.target_value * 100
@@ -367,13 +355,14 @@ class GoalCard(QFrame):
 
 
 class AddGoalDialog(QDialog):
-    """Dialog to add new goal"""
+    """Dialog to add new goal - COMPLETELY FIXED"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.habit_service = get_habit_service()
         self.setWindowTitle("Create New Goal")
-        self.setFixedSize(500, 400)
+        self.setModal(True)
+        self.setFixedSize(520, 480)
         self.setup_ui()
     
     def setup_ui(self):
@@ -385,42 +374,74 @@ class AddGoalDialog(QDialog):
         """)
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setContentsMargins(36, 36, 36, 36)
         layout.setSpacing(24)
         
         # Title
-        title = QLabel("🎯 Create New Goal")
-        title.setFont(QFont("SF Pro Display", 24, QFont.Bold))
+        title_layout = QHBoxLayout()
+        
+        icon = QLabel("🎯")
+        icon.setFont(QFont("SF Pro Display", 32))
+        title_layout.addWidget(icon)
+        
+        title = QLabel("Create New Goal")
+        title.setFont(QFont("SF Pro Display", 26, QFont.Bold))
         title.setStyleSheet("color: #111827;")
-        layout.addWidget(title)
+        title_layout.addWidget(title)
+        
+        title_layout.addStretch()
+        
+        layout.addLayout(title_layout)
         
         subtitle = QLabel("Set a target and track your progress")
-        subtitle.setFont(QFont("SF Pro Text", 13))
+        subtitle.setFont(QFont("SF Pro Text", 14))
         subtitle.setStyleSheet("color: #6B7280;")
         layout.addWidget(subtitle)
+        
+        layout.addSpacing(12)
         
         # Habit selector
         habit_label = QLabel("Select Habit:")
         habit_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        habit_label.setStyleSheet("color: #111827;")
+        habit_label.setStyleSheet("color: #374151;")
         layout.addWidget(habit_label)
         
         self.habit_combo = QComboBox()
-        self.habit_combo.setFont(QFont("SF Pro Text", 13))
-        self.habit_combo.setFixedHeight(44)
+        self.habit_combo.setFont(QFont("SF Pro Text", 14))
+        self.habit_combo.setFixedHeight(48)
+        self.habit_combo.setCursor(Qt.PointingHandCursor)
         self.habit_combo.setStyleSheet("""
             QComboBox {
                 background-color: #F9FAFB;
                 border: 2px solid #E5E7EB;
                 border-radius: 12px;
-                padding: 8px 16px;
+                padding: 10px 16px;
+                color: #111827;
             }
             QComboBox:hover {
                 border: 2px solid #6366F1;
+                background-color: #FFFFFF;
+            }
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 12px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #FFFFFF;
+                border: 2px solid #E5E7EB;
+                border-radius: 8px;
+                selection-background-color: #EEF2FF;
+                selection-color: #4F46E5;
+                padding: 4px;
             }
         """)
         
         habits = self.habit_service.get_all_habits()
+        if not habits:
+            QMessageBox.warning(self, "No Habits", "Please create at least one habit before creating a goal.")
+            self.reject()
+            return
+        
         for habit in habits:
             self.habit_combo.addItem(habit.name, habit.id)
         
@@ -429,47 +450,79 @@ class AddGoalDialog(QDialog):
         # Goal type
         type_label = QLabel("Goal Type:")
         type_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        type_label.setStyleSheet("color: #111827;")
+        type_label.setStyleSheet("color: #374151;")
         layout.addWidget(type_label)
         
         self.type_combo = QComboBox()
-        self.type_combo.setFont(QFont("SF Pro Text", 13))
-        self.type_combo.setFixedHeight(44)
+        self.type_combo.setFont(QFont("SF Pro Text", 14))
+        self.type_combo.setFixedHeight(48)
+        self.type_combo.setCursor(Qt.PointingHandCursor)
         self.type_combo.setStyleSheet("""
             QComboBox {
                 background-color: #F9FAFB;
                 border: 2px solid #E5E7EB;
                 border-radius: 12px;
-                padding: 8px 16px;
+                padding: 10px 16px;
+                color: #111827;
             }
             QComboBox:hover {
                 border: 2px solid #6366F1;
+                background-color: #FFFFFF;
+            }
+            QComboBox::drop-down {
+                border: none;
+                padding-right: 12px;
+            }
+            QComboBox QAbstractItemView {
+                background-color: #FFFFFF;
+                border: 2px solid #E5E7EB;
+                border-radius: 8px;
+                selection-background-color: #EEF2FF;
+                selection-color: #4F46E5;
+                padding: 4px;
             }
         """)
-        self.type_combo.addItems(["30_day_streak", "7_day_streak", "100_completions"])
+        
+        # CRITICAL FIX: Store value in UserRole, not as second parameter
+        self.type_combo.addItem("🔥 7 Day Streak", "7_day_streak")
+        self.type_combo.addItem("🌟 30 Day Streak", "30_day_streak")
+        self.type_combo.addItem("💯 100 Completions", "100_completions")
+        
+        # Set default
+        self.type_combo.setCurrentIndex(1)  # 30 day streak
+        
+        self.type_combo.currentIndexChanged.connect(self._update_target_value)
+        
         layout.addWidget(self.type_combo)
         
         # Target value
         target_label = QLabel("Target Value:")
         target_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        target_label.setStyleSheet("color: #111827;")
+        target_label.setStyleSheet("color: #374151;")
         layout.addWidget(target_label)
         
         self.target_spin = QSpinBox()
-        self.target_spin.setFont(QFont("SF Pro Text", 13))
-        self.target_spin.setFixedHeight(44)
+        self.target_spin.setFont(QFont("SF Pro Text", 14))
+        self.target_spin.setFixedHeight(48)
         self.target_spin.setMinimum(1)
         self.target_spin.setMaximum(365)
         self.target_spin.setValue(30)
+        self.target_spin.setCursor(Qt.PointingHandCursor)
         self.target_spin.setStyleSheet("""
             QSpinBox {
                 background-color: #F9FAFB;
                 border: 2px solid #E5E7EB;
                 border-radius: 12px;
-                padding: 8px 16px;
+                padding: 10px 16px;
+                color: #111827;
             }
             QSpinBox:hover {
                 border: 2px solid #6366F1;
+                background-color: #FFFFFF;
+            }
+            QSpinBox::up-button, QSpinBox::down-button {
+                width: 20px;
+                border: none;
             }
         """)
         layout.addWidget(self.target_spin)
@@ -477,35 +530,88 @@ class AddGoalDialog(QDialog):
         layout.addStretch()
         
         # Buttons
-        button_box = QDialogButtonBox()
-        button_box.setStandardButtons(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        button_box.setStyleSheet("""
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(12)
+        
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        cancel_btn.setFixedHeight(48)
+        cancel_btn.setCursor(Qt.PointingHandCursor)
+        cancel_btn.setStyleSheet("""
             QPushButton {
-                background-color: #6366F1;
-                color: #FFFFFF;
+                background-color: #F3F4F6;
+                color: #374151;
                 border: none;
-                border-radius: 10px;
-                padding: 10px 24px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 100px;
+                border-radius: 12px;
+                padding: 0px 28px;
             }
             QPushButton:hover {
-                background-color: #4F46E5;
+                background-color: #E5E7EB;
             }
         """)
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        create_btn = QPushButton("Create Goal")
+        create_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        create_btn.setFixedHeight(48)
+        create_btn.setCursor(Qt.PointingHandCursor)
+        create_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #667eea, stop:1 #764ba2);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 12px;
+                padding: 0px 32px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #5568d3, stop:1 #6a4191);
+            }
+        """)
+        create_btn.clicked.connect(self.accept)
+        button_layout.addWidget(create_btn)
+        
+        layout.addLayout(button_layout)
+    
+    def _update_target_value(self):
+        """Update target value based on goal type"""
+        goal_type = self.type_combo.currentData()
+        
+        print(f"[_update_target_value] Current type: {goal_type}")
+        
+        if goal_type == '7_day_streak':
+            self.target_spin.setValue(7)
+        elif goal_type == '30_day_streak':
+            self.target_spin.setValue(30)
+        elif goal_type == '100_completions':
+            self.target_spin.setValue(100)
     
     def get_goal_data(self):
-        """Return selected goal data"""
+        """Return selected goal data - FIXED VERSION"""
+        habit_id = self.habit_combo.currentData()
+        goal_type = self.type_combo.currentData()
+        target_value = self.target_spin.value()
+        
+        print(f"\n[AddGoalDialog.get_goal_data] Returning:")
+        print(f"  habit_id={habit_id} (type: {type(habit_id).__name__})")
+        print(f"  goal_type={goal_type} (type: {type(goal_type).__name__})")
+        print(f"  target_value={target_value} (type: {type(target_value).__name__})")
+        
+        # Validate
+        if not habit_id:
+            print("  ⚠️ WARNING: habit_id is None!")
+        if not goal_type:
+            print("  ⚠️ WARNING: goal_type is None!")
+        if not target_value or target_value <= 0:
+            print("  ⚠️ WARNING: target_value is invalid!")
+        
         return {
-            'habit_id': self.habit_combo.currentData(),
-            'goal_type': self.type_combo.currentText(),
-            'target_value': self.target_spin.value()
+            'habit_id': habit_id,
+            'goal_type': goal_type,
+            'target_value': target_value
         }
-
 
 class GoalsContentView(QWidget):
     """Premium Goals & Milestones View"""
@@ -706,13 +812,94 @@ class GoalsContentView(QWidget):
         self.content_layout.addStretch()
     
     def show_add_goal_dialog(self):
-        """Show dialog to add new goal"""
-        dialog = AddGoalDialog(self)
-        if dialog.exec() == QDialog.Accepted:
+        """Show dialog to add new goal - WITH DEBUG LOGGING"""
+        print("\n" + "="*50)
+        print("🎯 STARTING ADD GOAL PROCESS")
+        print("="*50)
+    
+        try:
+            # Step 1: Check habits exist
+            print("\n[1] Checking for habits...")
+            habits = self.habit_service.get_all_habits()
+            print(f"   ✓ Found {len(habits)} habits")
+        
+            if not habits:
+                print("   ✗ ERROR: No habits found!")
+                QMessageBox.warning(
+                    self,
+                    "No Habits Available",
+                    "⚠️ You need to create at least one habit before creating a goal.\n\nPlease go to the Dashboard and click '+ New Habit' first.",
+                    QMessageBox.Ok
+                )
+                return
+        
+            # Step 2: Create dialog
+            print("\n[2] Creating dialog...")
+            dialog = AddGoalDialog(self)
+            print("   ✓ Dialog created successfully")
+        
+            # Step 3: Show dialog
+            print("\n[3] Showing dialog...")
+            result = dialog.exec()
+            print(f"   ✓ Dialog result: {result} (1=Accepted, 0=Rejected)")
+        
+            if result != QDialog.Accepted:
+                print("   ℹ User cancelled dialog")
+                return
+        
+            # Step 4: Get goal data
+            print("\n[4] Getting goal data from dialog...")
             goal_data = dialog.get_goal_data()
-            self.goal_service.create_goal(
+            print(f"   ✓ Goal data received:")
+            print(f"      - Habit ID: {goal_data['habit_id']}")
+            print(f"      - Goal Type: {goal_data['goal_type']}")
+            print(f"      - Target Value: {goal_data['target_value']}")
+        
+            # Step 5: Create goal
+            print("\n[5] Creating goal in database...")
+            goal_id = self.goal_service.create_goal(
                 habit_id=goal_data['habit_id'],
                 goal_type=goal_data['goal_type'],
                 target_value=goal_data['target_value']
             )
+            print(f"   ✓ Goal created with ID: {goal_id}")
+        
+            if not goal_id:
+                raise Exception("create_goal returned None or 0")
+        
+            # Step 6: Reload goals
+            print("\n[6] Reloading goals list...")
             self.load_goals()
+            print("   ✓ Goals reloaded successfully")
+        
+            # Step 7: Success message
+            print("\n[7] Showing success message...")
+            QMessageBox.information(
+                self,
+                "Goal Created",
+                f"✅ Goal created successfully!\n\nYour {goal_data['goal_type'].replace('_', ' ')} goal has been added.",
+                QMessageBox.Ok
+            )
+        
+            print("\n" + "="*50)
+            print("✅ GOAL CREATION COMPLETED SUCCESSFULLY")
+            print("="*50 + "\n")
+        
+        except Exception as e:
+            print("\n" + "="*50)
+            print("❌ ERROR IN GOAL CREATION")
+            print("="*50)
+            print(f"Error type: {type(e).__name__}")
+            print(f"Error message: {str(e)}")
+        
+            import traceback
+            print("\nFull traceback:")
+            traceback.print_exc()
+            print("="*50 + "\n")
+        
+            QMessageBox.critical(
+                self,
+                "Error Creating Goal",
+                f"❌ Failed to create goal:\n\n{str(e)}\n\nPlease check the console for details.",
+                QMessageBox.Ok
+            )

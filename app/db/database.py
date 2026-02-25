@@ -35,3 +35,27 @@ def init_db():
 def get_db():
     """Legacy function for compatibility"""
     return get_db_connection()
+
+
+import sqlite3
+import os
+import time
+
+DATABASE_PATH = "habit_tracker.db"
+
+def get_db_connection(retries=3):
+    """Get database connection with retry logic"""
+    for attempt in range(retries):
+        try:
+            conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
+            return conn
+        except sqlite3.OperationalError as e:
+            if "locked" in str(e) and attempt < retries - 1:
+                print(f"Database locked, retrying... (attempt {attempt + 1}/{retries})")
+                time.sleep(0.5)
+            else:
+                raise
+    
+    raise sqlite3.OperationalError("Database is locked after multiple retries")
