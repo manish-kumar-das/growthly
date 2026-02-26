@@ -151,6 +151,11 @@ class HabitService:
 
             conn.commit()
             conn.close()
+
+            from app.services.goal_service import get_goal_service
+
+            get_goal_service().check_and_update_goals(habit_id)
+
             return True
         except Exception as e:
             conn.close()
@@ -175,6 +180,13 @@ class HabitService:
 
         conn.commit()
         conn.close()
+
+        try:
+            from app.services.goal_service import get_goal_service
+
+            get_goal_service().check_and_update_goals(habit_id)
+        except Exception as e:
+            print(f"Error updating goals on unmark: {e}")
 
     def is_habit_completed_today(self, habit_id):
         """Check if habit is completed today"""
