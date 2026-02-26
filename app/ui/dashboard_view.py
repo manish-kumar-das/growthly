@@ -12,10 +12,9 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QGraphicsDropShadowEffect,
 )
-from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRectF
+from PySide6.QtCore import Qt, QPropertyAnimation, QRectF
 from PySide6.QtGui import (
     QFont,
-    QCursor,
     QPainter,
     QColor,
     QPen,
@@ -28,7 +27,6 @@ from app.services.streak_service import get_streak_service
 
 
 class SimpleCircularProgress(QWidget):
-
     def __init__(self, percentage=0, parent=None):
         super().__init__(parent)
         self.percentage = percentage
@@ -417,7 +415,9 @@ class ModernDashboard(QWidget):
         greeting = (
             "Good morning"
             if hour < 12
-            else "Good afternoon" if hour < 18 else "Good evening"
+            else "Good afternoon"
+            if hour < 18
+            else "Good evening"
         )
 
         greeting_label = QLabel(f"{greeting}, Alex")
@@ -675,59 +675,128 @@ class ModernDashboard(QWidget):
 
         bottom_row.addWidget(weekly_card, stretch=2)
 
-        # Monthly Milestone
+        # Premium Streak Card
+        # ============================
         milestone_card = QFrame()
         milestone_card.setFixedHeight(310)
         milestone_card.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #FEF3C7, stop:1 #FDE68A);
-                border: 2px solid #F59E0B;
-                border-radius: 20px;
-            }
-        """)
-
-        milestone_layout = QVBoxLayout(milestone_card)
-        milestone_layout.setContentsMargins(30, 28, 30, 32)
-        milestone_layout.setSpacing(20)
-
-        milestone_title = QLabel("Monthly Milestone")
-        milestone_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        milestone_title.setStyleSheet("color: #92400E;")
-        milestone_layout.addWidget(milestone_title)
-
-        flame_container = QFrame()
-        flame_container.setFixedSize(130, 130)
-        flame_container.setStyleSheet("""
-            QFrame {
+            QFrame#streakCard {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #FEF3C7, stop:1 #FDE047);
-                border: 3px solid #F59E0B;
-                border-radius: 65px;
+                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+                border: 1.5px solid rgba(240, 147, 251, 0.35);
+                border-radius: 24px;
             }
         """)
+        milestone_card.setObjectName("streakCard")
 
-        flame_layout = QVBoxLayout(flame_container)
-        flame_layout.setContentsMargins(0, 0, 0, 0)
+        streak_card_shadow = QGraphicsDropShadowEffect()
+        streak_card_shadow.setBlurRadius(40)
+        streak_card_shadow.setColor(QColor(118, 75, 162, 120))  
+        streak_card_shadow.setOffset(0, 12)
+        milestone_card.setGraphicsEffect(streak_card_shadow)
 
-        flame_icon = QLabel("🔥")
-        flame_icon.setFont(QFont("SF Pro Display", 62))
-        flame_icon.setAlignment(Qt.AlignCenter)
-        flame_layout.addWidget(flame_icon)
+        ms_layout = QVBoxLayout(milestone_card)
+        ms_layout.setContentsMargins(24, 20, 24, 20)
+        ms_layout.setSpacing(0)
 
-        milestone_layout.addWidget(flame_container, alignment=Qt.AlignCenter)
+        # ── Header row: icon + title ──
+        header_row = QHBoxLayout()
+        header_row.setSpacing(8)
 
-        self.streak_label = QLabel("0 Day Streak!")
-        self.streak_label.setFont(QFont("SF Pro Display", 34, QFont.Bold))
-        self.streak_label.setStyleSheet("color: #92400E;")
+        flame_small = QLabel("🔥")
+        flame_small.setFont(QFont("SF Pro Display", 20))
+        flame_small.setStyleSheet("background: transparent; border: none;")
+        header_row.addWidget(flame_small)
+
+        streak_title = QLabel("Current Streak")
+        streak_title.setFont(QFont("SF Pro Display", 16, QFont.Bold))
+        streak_title.setStyleSheet(
+            "color: rgba(255,255,255,0.55); background: transparent; border: none;"
+        )
+        header_row.addWidget(streak_title)
+        header_row.addStretch()
+
+        # On-fire pill badge (shown when streak > 0)
+        self.fire_badge = QLabel("  🔥 On Fire!  ")
+        self.fire_badge.setFont(QFont("SF Pro Text", 11, QFont.Bold))
+        self.fire_badge.setStyleSheet("""
+            QLabel {
+                background: rgba(255, 255, 255, 0.22);
+                color: #FFFFFF;
+                border-radius: 10px;
+                padding: 2px 10px;
+                border: 1px solid rgba(255, 255, 255, 0.40);
+            }
+        """)
+        self.fire_badge.setVisible(False)
+        header_row.addWidget(self.fire_badge)
+
+        ms_layout.addLayout(header_row)
+        ms_layout.addSpacing(6)
+
+        # ── Hero number ──
+        self.streak_label = QLabel("0")
+        self.streak_label.setFont(QFont("SF Pro Display", 68, QFont.Black))
+        self.streak_label.setStyleSheet(
+            "color: #FFFFFF; background: transparent; border: none;"
+        )
         self.streak_label.setAlignment(Qt.AlignCenter)
-        milestone_layout.addWidget(self.streak_label)
+        ms_layout.addWidget(self.streak_label)
 
-        milestone_desc = QLabel("Keep building your habits!")
-        milestone_desc.setFont(QFont("SF Pro Text", 14))
-        milestone_desc.setStyleSheet("color: #B45309;")
-        milestone_desc.setAlignment(Qt.AlignCenter)
-        milestone_layout.addWidget(milestone_desc)
+        # ── "days" sub-label ──
+        days_unit_label = QLabel("days in a row")
+        days_unit_label.setFont(QFont("SF Pro Text", 13, QFont.DemiBold))
+        days_unit_label.setStyleSheet(
+            "color: rgba(255,255,255,0.45); background: transparent; border: none;"
+        )
+        days_unit_label.setAlignment(Qt.AlignCenter)
+        ms_layout.addWidget(days_unit_label)
+
+        ms_layout.addSpacing(10)
+
+        # ── Motivational tagline ──
+        self.streak_desc = QLabel("Start your first streak today!")
+        self.streak_desc.setFont(QFont("SF Pro Text", 13, QFont.DemiBold))
+        self.streak_desc.setStyleSheet(
+            "color: rgba(255, 255, 255, 0.80); background: transparent; border: none;"
+        )
+        self.streak_desc.setAlignment(Qt.AlignCenter)
+        self.streak_desc.setWordWrap(True)
+        ms_layout.addWidget(self.streak_desc)
+
+        ms_layout.addStretch()
+
+        # ── Footer: best streak stat ──
+        divider = QFrame()
+        divider.setFixedHeight(1)
+        divider.setStyleSheet("background: rgba(255, 255, 255, 0.25); border: none;")
+        ms_layout.addWidget(divider)
+        ms_layout.addSpacing(10)
+
+        footer_row = QHBoxLayout()
+        footer_row.setSpacing(6)
+
+        trophy_lbl = QLabel("🏆")
+        trophy_lbl.setFont(QFont("SF Pro Display", 15))
+        trophy_lbl.setStyleSheet("background: transparent; border: none;")
+        footer_row.addWidget(trophy_lbl)
+
+        best_text_lbl = QLabel("Best streak:")
+        best_text_lbl.setFont(QFont("SF Pro Text", 12))
+        best_text_lbl.setStyleSheet(
+            "color: rgba(255,255,255,0.45); background: transparent; border: none;"
+        )
+        footer_row.addWidget(best_text_lbl)
+
+        self.best_streak_label = QLabel("0 days")
+        self.best_streak_label.setFont(QFont("SF Pro Text", 12, QFont.Bold))
+        self.best_streak_label.setStyleSheet(
+            "color: rgba(255,255,255,0.85); background: transparent; border: none;"
+        )
+        footer_row.addWidget(self.best_streak_label)
+        footer_row.addStretch()
+
+        ms_layout.addLayout(footer_row)
 
         bottom_row.addWidget(milestone_card)
 
@@ -739,7 +808,9 @@ class ModernDashboard(QWidget):
     def _ordinal(self, n):
         if 11 <= n % 100 <= 13:
             return f"{n}th"
-        return f"{n}{['th','st','nd','rd','th','th','th','th','th','th'][n % 10]}"
+        return (
+            f"{n}{['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][n % 10]}"
+        )
 
     def show_add_habit(self):
         if self.main_window:
@@ -761,7 +832,10 @@ class ModernDashboard(QWidget):
             self.progress_text.setText("No habits yet.\nCreate your first one!")
             self.habits_count.setText("0")
             self.circular_progress.set_percentage(0)
-            self.streak_label.setText("0 Day Streak!")
+            self.streak_label.setText("0")
+            self.best_streak_label.setText("0 days")
+            self.fire_badge.setVisible(False)
+            self.streak_desc.setText("Start your first streak today!")
             self.load_weekly_activity()
             return
 
@@ -816,7 +890,39 @@ class ModernDashboard(QWidget):
             current = streak_info.get("current_streak", 0)
             max_streak = max(max_streak, current)
 
-        self.streak_label.setText(f"{max_streak} Day Streak!")
+        self.streak_label.setText(str(max_streak))
+
+        # Calculate best (longest) streak across all habits
+        best_streak = 0
+        for habit in habits:
+            streak_info = self.streak_service.get_streak_info(habit.id)
+            longest = streak_info.get(
+                "longest_streak", streak_info.get("current_streak", 0)
+            )
+            best_streak = max(best_streak, longest)
+
+        self.best_streak_label.setText(
+            f"{best_streak} day{'' if best_streak == 1 else 's'}"
+        )
+
+        # Show / hide fire badge
+        self.fire_badge.setVisible(max_streak > 0)
+
+        # Dynamic motivational text by milestone
+        if max_streak == 0:
+            self.streak_desc.setText("Start your first streak today!")
+        elif max_streak < 3:
+            self.streak_desc.setText("Great start — keep going! 💪")
+        elif max_streak < 7:
+            self.streak_desc.setText("Building momentum — don't stop now!")
+        elif max_streak < 14:
+            self.streak_desc.setText("One week strong! You're on fire! 🔥")
+        elif max_streak < 30:
+            self.streak_desc.setText("Two weeks and counting! Incredible!")
+        elif max_streak < 60:
+            self.streak_desc.setText("A full month! You're unstoppable! 🏆")
+        else:
+            self.streak_desc.setText("Legendary! An absolute habit machine! 🌟")
 
         # Load weekly activity
         self.load_weekly_activity()
