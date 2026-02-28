@@ -18,8 +18,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QGraphicsDropShadowEffect,
 )
-from PySide6.QtCore import Qt, QTime, QPropertyAnimation, QEasingCurve, QPoint
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtCore import Qt, QTime, QPropertyAnimation, QEasingCurve, QPoint, Property
+from PySide6.QtGui import QFont, QColor, QPainter, QLinearGradient
 from datetime import datetime
 from app.services.settings_service import get_settings_service
 from app.utils.constants import THEME_DARK, THEME_LIGHT
@@ -40,15 +40,20 @@ class SettingCard(QFrame):
     def setup_ui(self, icon, title, description, widget):
         """Setup setting card UI"""
         self.setMinimumHeight(100)
+        self.setObjectName("SettingCard")
         self.setStyleSheet("""
-            QFrame {
+            QFrame#SettingCard {
                 background-color: #FFFFFF;
                 border: 1px solid rgba(0, 0, 0, 0.05);
                 border-radius: 20px;
             }
-            QFrame:hover {
+            QFrame#SettingCard:hover {
                 background-color: #FDFDFF;
                 border: 1px solid rgba(102, 126, 234, 0.2);
+            }
+            QLabel {
+                border: none;
+                background: transparent;
             }
         """)
 
@@ -108,36 +113,58 @@ class SettingCard(QFrame):
 
 
 class ToggleSwitch(QCheckBox):
-    """iOS-style toggle switch"""
+    """Premium iOS-style toggle switch with animation"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedSize(60, 32)
         self.setCursor(Qt.PointingHandCursor)
-        self.setStyleSheet("""
-            QCheckBox {
-                background-color: transparent;
-            }
-            QCheckBox::indicator {
-                width: 60px;
-                height: 32px;
-                border-radius: 16px;
-                background-color: #E5E7EB;
-                border: 1px solid #D1D5DB;
-            }
-            QCheckBox::indicator:checked {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
-                border: none;
-            }
-            QCheckBox::indicator:hover {
-                background-color: #D1D5DB;
-            }
-            QCheckBox::indicator:checked:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5568d3, stop:0.5 #6a4191, stop:1 #e07af0);
-            }
-        """)
+
+        # Check initial state
+        self._thumb_pos = 32 if self.isChecked() else 4
+
+        self.anim = QPropertyAnimation(self, b"thumb_pos")
+        self.anim.setDuration(200)
+        self.anim.setEasingCurve(QEasingCurve.InOutCubic)
+
+        # Hide default indicator
+        self.setStyleSheet("QCheckBox::indicator { width: 0px; height: 0px; }")
+
+    def nextCheckState(self):
+        super().nextCheckState()
+        self.anim.stop()
+        self.anim.setEndValue(32 if self.isChecked() else 4)
+        self.anim.start()
+
+    @Property(int)
+    def thumb_pos(self):
+        return self._thumb_pos
+
+    @thumb_pos.setter
+    def thumb_pos(self, pos):
+        self._thumb_pos = pos
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+
+        # Track
+        if self.isChecked():
+            grad = QLinearGradient(0, 0, self.width(), 0)
+            grad.setColorAt(0, QColor("#667eea"))
+            grad.setColorAt(1, QColor("#764ba2"))
+            p.setBrush(grad)
+        else:
+            p.setBrush(QColor("#E5E7EB"))
+
+        p.setPen(Qt.NoPen)
+        p.drawRoundedRect(0, 0, self.width(), self.height(), 16, 16)
+
+        # Thumb
+        p.setBrush(QColor("white"))
+        # Subtle thumb shadow
+        p.drawEllipse(self._thumb_pos, 4, 24, 24)
 
 
 class SettingsContentView(QWidget):
@@ -364,25 +391,44 @@ class SettingsContentView(QWidget):
         self.content_layout.addSpacing(12)
         self.add_section_header("💾", "Data Management", "Backup and restore your data")
 
-        # Export data
-        export_btn = QPushButton("📤 Export Data")
-        export_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        export_btn.setFixedHeight(44)
-        export_btn.setFixedWidth(160)
-        export_btn.setCursor(Qt.PointingHandCursor)
-        export_btn.setStyleSheet("""
+        # Consistent style for card buttons
+        primary_btn_style = """
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3B82F6, stop:1 #2563EB);
+                    stop:0 #667eea, stop:1 #764ba2);
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
+                padding: 0px 16px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2563EB, stop:1 #1D4ED8);
+                    stop:0 #5568d3, stop:1 #6a4191);
             }
-        """)
+        """
+
+        danger_btn_style = """
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #EF4444, stop:1 #DC2626);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 12px;
+                padding: 0px 16px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #DC2626, stop:1 #B91C1C);
+            }
+        """
+
+        # Export data
+        export_btn = QPushButton("📤 Export Data")
+        export_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        export_btn.setFixedHeight(48)
+        export_btn.setFixedWidth(200)
+        export_btn.setCursor(Qt.PointingHandCursor)
+        export_btn.setStyleSheet(primary_btn_style)
         export_btn.clicked.connect(self.export_data)
 
         export_card = SettingCard(
@@ -396,22 +442,10 @@ class SettingsContentView(QWidget):
         # Import data
         import_btn = QPushButton("📥 Import Data")
         import_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        import_btn.setFixedHeight(44)
-        import_btn.setFixedWidth(160)
+        import_btn.setFixedHeight(48)
+        import_btn.setFixedWidth(200)
         import_btn.setCursor(Qt.PointingHandCursor)
-        import_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #8B5CF6, stop:1 #7C3AED);
-                color: #FFFFFF;
-                border: none;
-                border-radius: 12px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #7C3AED, stop:1 #6D28D9);
-            }
-        """)
+        import_btn.setStyleSheet(primary_btn_style)
         import_btn.clicked.connect(self.import_data)
 
         import_card = SettingCard(
@@ -431,22 +465,10 @@ class SettingsContentView(QWidget):
         # View trash
         trash_btn = QPushButton("🗑️ View Trash")
         trash_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        trash_btn.setFixedHeight(44)
-        trash_btn.setFixedWidth(160)
+        trash_btn.setFixedHeight(48)
+        trash_btn.setFixedWidth(200)
         trash_btn.setCursor(Qt.PointingHandCursor)
-        trash_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #F59E0B, stop:1 #D97706);
-                color: #FFFFFF;
-                border: none;
-                border-radius: 12px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #D97706, stop:1 #B45309);
-            }
-        """)
+        trash_btn.setStyleSheet(primary_btn_style)
         trash_btn.clicked.connect(self.view_trash)
 
         trash_card = SettingCard(
@@ -460,22 +482,10 @@ class SettingsContentView(QWidget):
         # Clear all data
         clear_btn = QPushButton("🔥 Clear All Data")
         clear_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        clear_btn.setFixedHeight(44)
-        clear_btn.setFixedWidth(180)
+        clear_btn.setFixedHeight(48)
+        clear_btn.setFixedWidth(200)
         clear_btn.setCursor(Qt.PointingHandCursor)
-        clear_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #EF4444, stop:1 #DC2626);
-                color: #FFFFFF;
-                border: none;
-                border-radius: 12px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #DC2626, stop:1 #B91C1C);
-            }
-        """)
+        clear_btn.setStyleSheet(danger_btn_style)
         clear_btn.clicked.connect(self.clear_all_data)
 
         clear_card = SettingCard(
@@ -490,11 +500,16 @@ class SettingsContentView(QWidget):
 
         # Info footer
         info_frame = QFrame()
+        info_frame.setObjectName("InfoFrame")
         info_frame.setStyleSheet("""
-            QFrame {
+            QFrame#InfoFrame {
                 background-color: rgba(99, 102, 241, 0.05);
                 border-left: 4px solid #6366F1;
                 border-radius: 12px;
+            }
+            QLabel {
+                border: none;
+                background: transparent;
             }
         """)
 
