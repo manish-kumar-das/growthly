@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QGraphicsDropShadowEffect,
 )
-from PySide6.QtCore import Qt, QTime, QPropertyAnimation, QEasingCurve, QPoint, Property
+from PySide6.QtCore import Qt, QTime, QPropertyAnimation, QEasingCurve, Property
 from PySide6.QtGui import QFont, QColor, QPainter, QLinearGradient
 from datetime import datetime
 from app.services.settings_service import get_settings_service
@@ -185,7 +185,7 @@ class SettingsContentView(QWidget):
 
         # Header
         header = QFrame()
-        header.setFixedHeight(120)
+        header.setMinimumHeight(120)
         header.setStyleSheet("""
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -211,12 +211,17 @@ class SettingsContentView(QWidget):
 
         title = QLabel("Settings")
         title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        title.setStyleSheet("color: #111827; background: transparent;")
+        title.setStyleSheet(
+            "color: #111827; background: transparent; padding-bottom: 4px;"
+        )
+        title.setWordWrap(True)
         title_text_layout.addWidget(title)
 
         subtitle = QLabel("Customize your habit tracking experience")
         subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet("color: #6B7280; background: transparent;")
+        subtitle.setStyleSheet(
+            "color: #6B7280; background: transparent; padding-bottom: 2px;"
+        )
         title_text_layout.addWidget(subtitle)
 
         title_section.addLayout(title_text_layout)

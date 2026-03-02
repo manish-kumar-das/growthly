@@ -418,9 +418,8 @@ class AnalyticsContentView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Header
         header = QFrame()
-        header.setFixedHeight(100)
+        header.setMinimumHeight(10)
         header.setStyleSheet("""
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -430,7 +429,7 @@ class AnalyticsContentView(QWidget):
         """)
 
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(40, 20, 40, 20)
+        header_layout.setContentsMargins(40, 24, 40, 24)
 
         title_section = QHBoxLayout()
         title_section.setSpacing(12)
@@ -445,12 +444,17 @@ class AnalyticsContentView(QWidget):
 
         title = QLabel("Analytics")
         title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        title.setStyleSheet("color: #111827; background: transparent;")
+        title.setStyleSheet(
+            "color: #111827; background: transparent; padding-bottom: 4px;"
+        )
+        title.setWordWrap(True)
         title_text_layout.addWidget(title)
 
         subtitle = QLabel("Track your progress and insights")
         subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet("color: #6B7280; background: transparent;")
+        subtitle.setStyleSheet(
+            "color: #6B7280; background: transparent; padding-bottom: 2px;"
+        )
         title_text_layout.addWidget(subtitle)
 
         title_section.addLayout(title_text_layout)
@@ -760,7 +764,9 @@ class AnalyticsContentView(QWidget):
 
         graph_title = QLabel("📈 Completion Trend")
         graph_title.setFont(QFont("SF Pro Display", 24, QFont.Bold))
-        graph_title.setStyleSheet("color: #111827; background: transparent;")
+        graph_title.setStyleSheet(
+            "color: #111827; background: transparent; border: none;"
+        )
         graph_header.addWidget(graph_title)
 
         graph_header.addStretch()
@@ -768,7 +774,9 @@ class AnalyticsContentView(QWidget):
         # Period buttons
         period_label = QLabel("Period:")
         period_label.setFont(QFont("SF Pro Text", 14, QFont.Medium))
-        period_label.setStyleSheet("color: #6B7280; background: transparent;")
+        period_label.setStyleSheet(
+            "color: #6B7280; background: transparent; border: none;"
+        )
         graph_header.addWidget(period_label)
 
         self.period_combo = QComboBox()
@@ -890,7 +898,7 @@ class AnalyticsContentView(QWidget):
             QFrame#comparisonCard {
                 background-color: #FFFFFF;
                 border-radius: 20px;
-                border: 1px solid #F1F5F9;
+                border: none;
             }
         """)
 
@@ -907,7 +915,7 @@ class AnalyticsContentView(QWidget):
         # TITLE
         title = QLabel("📊 This Week vs Last Week")
         title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        title.setStyleSheet("color: #111827;")
+        title.setStyleSheet("color: #111827; background: transparent; border: none;")
         layout.addWidget(title)
 
         # GET DATA
@@ -945,12 +953,16 @@ class AnalyticsContentView(QWidget):
 
         last_label = QLabel("Last Week")
         last_label.setFont(QFont("SF Pro Text", 12))
-        last_label.setStyleSheet("color: #6B7280;")
+        last_label.setStyleSheet(
+            "color: #6B7280; background-color: #FFFFFF; border: none;"
+        )
         last_label.setAlignment(Qt.AlignCenter)
 
         last_value = QLabel(str(last_week))
         last_value.setFont(QFont("SF Pro Display", 36, QFont.Bold))
-        last_value.setStyleSheet("color: #111827;")
+        last_value.setStyleSheet(
+            "color: #111827; background-color: #FFFFFF; border: none;"
+        )
         last_value.setAlignment(Qt.AlignCenter)
 
         last_layout.addWidget(last_label)
@@ -959,7 +971,7 @@ class AnalyticsContentView(QWidget):
         # Arrow
         arrow = QLabel("→")
         arrow.setFont(QFont("SF Pro Display", 24))
-        arrow.setStyleSheet("color: #9CA3AF;")
+        arrow.setStyleSheet("color: #9CA3AF; background-color: #FFFFFF; border: none;")
 
         # This Week
         this_layout = QVBoxLayout()
@@ -967,12 +979,16 @@ class AnalyticsContentView(QWidget):
 
         this_label = QLabel("This Week")
         this_label.setFont(QFont("SF Pro Text", 12))
-        this_label.setStyleSheet("color: #6B7280;")
+        this_label.setStyleSheet(
+            "color: #6B7280; background-color: #FFFFFF; border: none;"
+        )
         this_label.setAlignment(Qt.AlignCenter)
 
         this_value = QLabel(str(this_week))
         this_value.setFont(QFont("SF Pro Display", 36, QFont.Bold))
-        this_value.setStyleSheet("color: #111827;")
+        this_value.setStyleSheet(
+            "color: #111827; background-color: #FFFFFF; border: none;"
+        )
         this_value.setAlignment(Qt.AlignCenter)
 
         this_layout.addWidget(this_label)
@@ -1037,7 +1053,9 @@ class AnalyticsContentView(QWidget):
         # INSIGHT
         insight = QLabel(insight_text)
         insight.setFont(QFont("SF Pro Text", 13))
-        insight.setStyleSheet("color: #6B7280;")
+        insight.setStyleSheet(
+            "color: #6B7280; background-color: #FFFFFF; border: none;"
+        )
         insight.setAlignment(Qt.AlignCenter)
         insight.setWordWrap(True)
         layout.addWidget(insight)
@@ -1324,12 +1342,16 @@ class AnalyticsContentView(QWidget):
 
         best_title = QLabel("🏆 Best Performers")
         best_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        best_title.setStyleSheet("color: #111827;")
+        best_title.setStyleSheet(
+            "color: #111827; background: transparent; border: none;"
+        )
         best_layout.addWidget(best_title)
 
         best_subtitle = QLabel("Top 3 habits - Keep up the great work!")
         best_subtitle.setFont(QFont("SF Pro Text", 12))
-        best_subtitle.setStyleSheet("color: #6B7280;")
+        best_subtitle.setStyleSheet(
+            "color: #6B7280; background: transparent; border: none;"
+        )
         best_layout.addWidget(best_subtitle)
 
         medals = ["🥇", "🥈", "🥉"]
@@ -1361,12 +1383,16 @@ class AnalyticsContentView(QWidget):
 
         worst_title = QLabel("⚠️ Needs Attention")
         worst_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        worst_title.setStyleSheet("color: #111827;")
+        worst_title.setStyleSheet(
+            "color: #111827; background: transparent; border: none;"
+        )
         worst_layout.addWidget(worst_title)
 
         worst_subtitle = QLabel("Focus on improving these habits")
         worst_subtitle.setFont(QFont("SF Pro Text", 12))
-        worst_subtitle.setStyleSheet("color: #6B7280;")
+        worst_subtitle.setStyleSheet(
+            "color: #6B7280; background: transparent; border: none;"
+        )
         worst_layout.addWidget(worst_subtitle)
 
         warnings = ["🔴", "🟠", "🟡"]
@@ -1492,7 +1518,9 @@ class AnalyticsContentView(QWidget):
 
         time_title = QLabel("⏰ Time of Day")
         time_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        time_title.setStyleSheet("color: #111827;")
+        time_title.setStyleSheet(
+            "color: #111827; background: transparent; border: none;"
+        )
         time_layout.addWidget(time_title)
 
         # Calculate time of day stats (mock data - you can enhance this)
@@ -1605,7 +1633,9 @@ class AnalyticsContentView(QWidget):
             f"💡 You're most productive in the {best_time['name'].lower()}. Schedule important habits early!"
         )
         insight_label.setFont(QFont("SF Pro Text", 12))
-        insight_label.setStyleSheet("color: #4F46E5;")
+        insight_label.setStyleSheet(
+            "color: #4F46E5; background: transparent; border: none;"
+        )
         insight_label.setWordWrap(True)
         insight_layout.addWidget(insight_label)
 
@@ -1636,7 +1666,9 @@ class AnalyticsContentView(QWidget):
 
         diff_title = QLabel("💪 Difficulty Analysis")
         diff_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        diff_title.setStyleSheet("color: #111827;")
+        diff_title.setStyleSheet(
+            "color: #111827; background: transparent; border: none;"
+        )
         diff_layout.addWidget(diff_title)
 
         # Calculate difficulty levels
@@ -1767,7 +1799,9 @@ class AnalyticsContentView(QWidget):
 
         rec_label = QLabel(rec_text)
         rec_label.setFont(QFont("SF Pro Text", 12))
-        rec_label.setStyleSheet("color: #92400E;")
+        rec_label.setStyleSheet(
+            "color: #92400E; background: transparent; border: none;"
+        )
         rec_label.setWordWrap(True)
         rec_layout.addWidget(rec_label)
 

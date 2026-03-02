@@ -283,16 +283,16 @@ class WeekDayCard(QWidget):
         self.setup_ui(day_name, percentage, day_number)
 
     def setup_ui(self, day_name, percentage, day_number):
-        self.setFixedWidth(125)
+        self.setFixedWidth(135)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(10)
         main_layout.setAlignment(Qt.AlignCenter)
 
-        # ---------- CARD ----------
+        # CARD
         card = QFrame()
-        card.setFixedSize(125, 190)
+        card.setFixedSize(135, 190)
 
         if percentage > 0:
             background = """
@@ -317,13 +317,13 @@ class WeekDayCard(QWidget):
         """)
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(18, 22, 18, 20)
+        card_layout.setContentsMargins(12, 22, 12, 20)
         card_layout.setSpacing(12)
         card_layout.setAlignment(Qt.AlignCenter)
 
         # Percentage
         percent_label = QLabel(f"{percentage}%")
-        percent_label.setFont(QFont("SF Pro Display", 32, QFont.Bold))
+        percent_label.setFont(QFont("SF Pro Display", 26, QFont.Bold))
         percent_label.setStyleSheet(f"color: {text_color}; background: transparent;")
         percent_label.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(percent_label)
@@ -348,7 +348,7 @@ class WeekDayCard(QWidget):
             """)
 
         progress_fill = QFrame(progress_bg)
-        progress_fill.setGeometry(0, 0, int((percentage / 100) * 85), 6)
+        progress_fill.setGeometry(0, 0, int((percentage / 100) * 111), 6)
 
         progress_fill.setStyleSheet("""
             QFrame {
@@ -403,45 +403,59 @@ class ModernDashboard(QWidget):
 
         # Top navbar
         navbar = QFrame()
-        navbar.setFixedHeight(85)
-        navbar.setStyleSheet("QFrame { background-color: #FFFFFF; border: none; }")
+        navbar.setMinimumHeight(120)
+        navbar.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #FFFFFF, stop:1 #F9FAFB);
+                border: none;
+            }
+        """)
 
         navbar_layout = QHBoxLayout(navbar)
-        navbar_layout.setContentsMargins(36, 0, 36, 0)
+        navbar_layout.setContentsMargins(40, 24, 40, 24)
 
         # Greeting
-        greeting_layout = QVBoxLayout()
-        greeting_layout.setSpacing(4)
+        greeting_container = QHBoxLayout()
+        greeting_container.setSpacing(12)
+        greeting_container.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
         hour = datetime.now().hour
-        greeting = (
-            "Good morning"
-            if hour < 12
-            else "Good afternoon"
-            if hour < 18
-            else "Good evening"
-        )
+        if hour < 12:
+            emoji, greeting_text = "☀️", "Good morning"
+        elif hour < 18:
+            emoji, greeting_text = "🌤️", "Good afternoon"
+        else:
+            emoji, greeting_text = "🌙", "Good evening"
+
+        emoji_label = QLabel(emoji)
+        emoji_label.setFont(QFont("SF Pro Display", 28))
+        emoji_label.setStyleSheet("color: #111827; background: transparent;")
+        greeting_container.addWidget(emoji_label)
+
+        greeting_layout = QVBoxLayout()
+        greeting_layout.setSpacing(0)
+        greeting_layout.setAlignment(Qt.AlignVCenter)
 
         profile = self.profile_service.get_profile()
         first_name = profile["name"].split()[0] if profile["name"] else "there"
 
-        self.greeting_label = QLabel(f"{greeting}, {first_name}!")
-        self.greeting_label.setFont(QFont("SF Pro Display", 30, QFont.Bold))
-        self.greeting_label.setStyleSheet("color: #111827;")
+        self.greeting_label = QLabel(f"{greeting_text}, {first_name}!")
+        self.greeting_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
+        self.greeting_label.setStyleSheet("color: #111827; background: transparent;")
         greeting_layout.addWidget(self.greeting_label)
 
         today = datetime.now()
-        # date_str = today.strftime("%A, %B %dth")
         date_str = today.strftime(f"%A, %B {self._ordinal(today.day)}")
 
-        date_label = QLabel(
-            f'{date_str} • "Success is the sum of small efforts, repeated day in and day out."'
-        )
-        date_label.setFont(QFont("SF Pro Text", 13))
-        date_label.setStyleSheet("color: #6B7280;")
+        date_label = QLabel(date_str)
+        date_label.setFont(QFont("SF Pro Text", 14))
+        date_label.setStyleSheet("color: #6B7280; background: transparent;")
+        date_label.setWordWrap(True)
         greeting_layout.addWidget(date_label)
 
-        navbar_layout.addLayout(greeting_layout)
+        greeting_container.addLayout(greeting_layout)
+        navbar_layout.addLayout(greeting_container)
         navbar_layout.addStretch()
 
         # Notification
@@ -508,6 +522,7 @@ class ModernDashboard(QWidget):
         # Daily Completion
         daily_card = QFrame()
         daily_card.setFixedWidth(380)
+        daily_card.setFixedHeight(448)
         daily_card.setStyleSheet("""
             QFrame {
                 background-color: #FFFFFF;
@@ -540,7 +555,7 @@ class ModernDashboard(QWidget):
         # Today's Habits
         habits_card = QFrame()
         habits_card.setObjectName("todayCard")
-        habits_card.setFixedHeight(455)
+        habits_card.setFixedHeight(448)
         habits_card.setStyleSheet("""
             QFrame#todayCard {
                 background-color: #FFFFFF;
@@ -681,7 +696,6 @@ class ModernDashboard(QWidget):
         bottom_row.addWidget(weekly_card, stretch=2)
 
         # Premium Streak Card
-        # ============================
         milestone_card = QFrame()
         milestone_card.setFixedHeight(310)
         milestone_card.setStyleSheet("""
@@ -704,7 +718,6 @@ class ModernDashboard(QWidget):
         ms_layout.setContentsMargins(24, 20, 24, 20)
         ms_layout.setSpacing(0)
 
-        # ── Header row: icon + title ──
         header_row = QHBoxLayout()
         header_row.setSpacing(8)
 
