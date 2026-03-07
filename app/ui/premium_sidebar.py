@@ -8,12 +8,11 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QProgressBar,
     QWidget,
 )
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont, QCursor
-from datetime import datetime
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from app.utils.image_utils import get_circular_pixmap
 
 
 class PremiumSidebar(QFrame):
@@ -190,27 +189,32 @@ class PremiumSidebar(QFrame):
         profile_layout.setSpacing(14)
 
         # Avatar
-        avatar = QFrame()
-        avatar.setFixedSize(48, 48)
-        avatar.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #F59E0B, stop:1 #EF4444);
-                border: 3px solid rgba(255, 255, 255, 0.4);
-                border-radius: 24px;
-            }
-        """)
+        self.avatar_frame = QFrame()
+        self.avatar_frame.setFixedSize(52, 52)
+        self.avatar_frame.setStyleSheet("background: transparent; border: none;")
 
-        avatar_layout = QVBoxLayout(avatar)
+        avatar_layout = QVBoxLayout(self.avatar_frame)
         avatar_layout.setContentsMargins(0, 0, 0, 0)
+        avatar_layout.setAlignment(Qt.AlignCenter)
 
-        avatar_text = QLabel("👤")
-        avatar_text.setFont(QFont("SF Pro Display", 24))
-        avatar_text.setAlignment(Qt.AlignCenter)
-        avatar_text.setStyleSheet("background: transparent; border: none;")
-        avatar_layout.addWidget(avatar_text)
+        self.avatar_label = QLabel()
+        self.avatar_label.setFixedSize(48, 48)
+        self.avatar_label.setAlignment(Qt.AlignCenter)
+        self.avatar_label.setScaledContents(True)
+        self._set_default_avatar_style()
 
-        profile_layout.addWidget(avatar)
+        self.avatar_emoji = QLabel("👤")
+        self.avatar_emoji.setFont(QFont("SF Pro Display", 24))
+        self.avatar_emoji.setAlignment(Qt.AlignCenter)
+        self.avatar_emoji.setStyleSheet("background: transparent; border: none;")
+        
+        avatar_layout.addWidget(self.avatar_label)
+        
+        # Emoji overlay
+        self.avatar_emoji.setParent(self.avatar_label)
+        self.avatar_emoji.setGeometry(0, 0, 48, 48)
+
+        profile_layout.addWidget(self.avatar_frame)
 
         # User info
         user_info_layout = QVBoxLayout()
@@ -317,12 +321,39 @@ class PremiumSidebar(QFrame):
             self.profile_name_label.setText(name)
 
     def load_profile_name(self):
-        """Load profile name from database"""
+        """Load profile name and avatar from database"""
         try:
             from app.services.profile_service import get_profile_service
 
             profile_service = get_profile_service()
             profile = profile_service.get_profile()
             self.profile_name_label.setText(profile["name"])
-        except:
+            self.update_profile_avatar(profile.get("avatar_path"))
+        except Exception:
             pass
+
+    def update_profile_avatar(self, path):
+        """Update profile avatar display"""
+        import os
+
+        if path and os.path.exists(path):
+            pix = get_circular_pixmap(path, 48)
+            if pix:
+                self.avatar_label.setPixmap(pix)
+                self.avatar_label.setStyleSheet("background: transparent; border: 1.5px solid rgba(255, 255, 255, 0.4); border-radius: 24px;")
+                self.avatar_emoji.hide()
+            else:
+                self.avatar_emoji.show()
+                self._set_default_avatar_style()
+        else:
+            self.avatar_label.clear()
+            self.avatar_emoji.show()
+            self._set_default_avatar_style()
+
+    def _set_default_avatar_style(self):
+        self.avatar_label.setStyleSheet("""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #F59E0B, stop:1 #EF4444);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 24px;
+        """)

@@ -15,12 +15,16 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QGraphicsDropShadowEffect,
     QSizePolicy,
+    QFileDialog,
 )
+import os
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont, QColor
 from app.services.habit_service import get_habit_service
 from app.services.streak_service import get_streak_service
 from app.services.profile_service import get_profile_service
+from app.ui.crop_dialog import CropDialog
+from app.utils.image_utils import get_circular_pixmap
 
 
 def _shadow(parent=None, blur=14, y=3, alpha=10):
@@ -140,25 +144,59 @@ class ProfileContentView(QWidget):
         h_lay.setContentsMargins(32, 24, 32, 24)
         h_lay.setSpacing(20)
 
-        # Avatar — 90px
-        av = QFrame()
-        av.setFixedSize(90, 90)
-        av.setStyleSheet("""
-            QFrame {
-                background-color: #F3F4F6;
+        # Avatar — 94px Container
+        self.av_container = QFrame()
+        self.av_container.setFixedSize(94, 94)
+        self.av_container.setStyleSheet("background: transparent; border: none;")
+        self.av_container.setGraphicsEffect(_shadow(self.av_container, blur=12, y=4, alpha=15))
+        
+        av_l = QVBoxLayout(self.av_container)
+        av_l.setContentsMargins(2, 2, 2, 2) # Padding for the border
+        av_l.setAlignment(Qt.AlignCenter)
+        
+        self.av_label = QLabel()
+        self.av_label.setFixedSize(90, 90)
+        self.av_label.setAlignment(Qt.AlignCenter)
+        self.av_label.setScaledContents(True)
+        self.av_label.setStyleSheet("""
+            background-color: #F3F4F6;
+            border: 2px solid #E5E7EB;
+            border-radius: 45px;
+        """)
+        
+        self.av_icon = QLabel("👤")
+        self.av_icon.setFont(QFont("SF Pro Display", 42))
+        self.av_icon.setAlignment(Qt.AlignCenter)
+        self.av_icon.setStyleSheet("background: transparent; border: none;")
+        
+        av_l.addWidget(self.av_label)
+        
+        # Icon overlay
+        self.av_icon.setParent(self.av_label)
+        self.av_icon.setGeometry(0, 0, 90, 90)
+        
+        # Change photo button (overlay)
+        self.change_av_btn = QPushButton("📷")
+        self.change_av_btn.setParent(self.av_container)
+        self.change_av_btn.setFixedSize(32, 32)
+        self.change_av_btn.move(62, 62)
+        self.change_av_btn.setCursor(Qt.PointingHandCursor)
+        self.change_av_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFFFF;
                 border: 2px solid #E5E7EB;
-                border-radius: 45px;
+                border-radius: 16px;
+                font-size: 14px;
+                padding-bottom: 2px;
+            }
+            QPushButton:hover {
+                background-color: #F9FAFB;
+                border: 2px solid #7C3AED;
             }
         """)
-        av.setGraphicsEffect(_shadow(av, blur=10, y=3, alpha=12))
-        av_l = QVBoxLayout(av)
-        av_l.setContentsMargins(0, 0, 0, 0)
-        av_l.setAlignment(Qt.AlignCenter)
-        av_icon = QLabel("👤")
-        av_icon.setFont(QFont("SF Pro Display", 42))
-        av_icon.setAlignment(Qt.AlignCenter)
-        av_l.addWidget(av_icon)
-        h_lay.addWidget(av)
+        self.change_av_btn.clicked.connect(self.select_avatar)
+        
+        h_lay.addWidget(self.av_container)
 
         # Name
         self.name_header = QLabel("Loading…")
@@ -230,7 +268,8 @@ class ProfileContentView(QWidget):
         btn_row.addStretch()
         f_lay.addLayout(btn_row)
 
-        main.addWidget(form, stretch=1)
+        main.addWidget(form)
+        main.addStretch()
 
     # ─── field builder ───────────────────────────────
     def _add_field(self, label_text, icon, parent_layout, multiline=False):
@@ -264,8 +303,11 @@ class ProfileContentView(QWidget):
         row.addWidget(ic)
 
         if multiline:
+            container.setFixedHeight(64)
+            row.setAlignment(Qt.AlignTop)
+            row.setContentsMargins(12, 10, 12, 2)
             edit = QTextEdit()
-            edit.setFixedHeight(70)
+            edit.setFixedHeight(48)
             edit.setStyleSheet(
                 "border:none; background:transparent; font-size:14px; color:#1E293B; font-family:Inter;"
             )
@@ -288,7 +330,43 @@ class ProfileContentView(QWidget):
         self.inputs["name"].setText(profile["name"])
         self.inputs["email"].setText(profile["email"])
         self.inputs["bio"].setText(profile["bio"])
+        self.set_avatar_image(profile.get("avatar_path"))
         self._refresh_stats()
+
+    def set_avatar_image(self, path):
+        if path and os.path.exists(path):
+            pix = get_circular_pixmap(path, 90)
+            if pix:
+                self.av_label.setPixmap(pix)
+                self.av_label.setStyleSheet("background: transparent; border: 1px solid #E5E7EB; border-radius: 45px;")
+                self.av_icon.hide()
+            else:
+                self.av_icon.show()
+                self._reset_avatar_style()
+        else:
+            self.av_label.clear()
+            self.av_icon.show()
+            self._reset_avatar_style()
+
+    def _reset_avatar_style(self):
+        self.av_label.setStyleSheet("""
+            background-color: #F3F4F6;
+            border: 2px solid #E5E7EB;
+            border-radius: 45px;
+        """)
+
+    def select_avatar(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Profile Photo", "", "Images (*.png *.jpg *.jpeg *.bmp)"
+        )
+        if path:
+            dialog = CropDialog(path, self)
+            if dialog.exec():
+                cropped_path = dialog.final_path
+                self.profile_service.update_profile(avatar_path=cropped_path)
+                self.set_avatar_image(cropped_path)
+                if self.main_window and hasattr(self.main_window, "sidebar"):
+                    self.main_window.sidebar.update_profile_avatar(cropped_path)
 
     def _refresh_stats(self):
         habits = self.habit_service.get_all_habits()
