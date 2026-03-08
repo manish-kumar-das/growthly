@@ -25,6 +25,7 @@ from app.services.streak_service import get_streak_service
 from app.services.profile_service import get_profile_service
 from app.ui.crop_dialog import CropDialog
 from app.utils.image_utils import get_circular_pixmap
+from app.themes import get_theme_manager
 
 
 def _shadow(parent=None, blur=14, y=3, alpha=10):
@@ -115,11 +116,13 @@ class ProfileContentView(QWidget):
         self.habit_service = get_habit_service()
         self.streak_service = get_streak_service()
         self.profile_service = get_profile_service()
+        self.theme_manager = get_theme_manager()
         self.setup_ui()
         self.load_profile_data()
 
     def setup_ui(self):
-        self.setStyleSheet("background-color: #F9FAFB;")
+        colors = self.theme_manager.get_theme()
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
 
         main = QVBoxLayout(self)
         main.setContentsMargins(40, 28, 40, 28)
@@ -128,19 +131,19 @@ class ProfileContentView(QWidget):
         # ═══════════════════════════════════════════════
         # 1. HEADER — Avatar + Name only
         # ═══════════════════════════════════════════════
-        header = QFrame()
-        header.setObjectName("headerCard")
-        header.setStyleSheet("""
-            QFrame#headerCard {
-                background-color: #FFFFFF;
+        self.header = QFrame()
+        self.header.setObjectName("headerCard")
+        self.header.setStyleSheet(f"""
+            QFrame#headerCard {{
+                background-color: {colors.BG_PRIMARY};
                 border: 1px solid #E5E7EB;
                 border-radius: 20px;
-            }
-            QLabel { background:transparent; border:none; }
+            }}
+            QLabel {{ background:transparent; border:none; }}
         """)
-        header.setGraphicsEffect(_shadow(header))
+        self.header.setGraphicsEffect(_shadow(self.header))
 
-        h_lay = QHBoxLayout(header)
+        h_lay = QHBoxLayout(self.header)
         h_lay.setContentsMargins(32, 24, 32, 24)
         h_lay.setSpacing(20)
 
@@ -204,7 +207,7 @@ class ProfileContentView(QWidget):
         self.name_header.setStyleSheet("color:#111827; letter-spacing:-0.3px;")
         h_lay.addWidget(self.name_header, stretch=1)
 
-        main.addWidget(header)
+        main.addWidget(self.header)
 
         # ═══════════════════════════════════════════════
         # 2. STAT CARDS ROW
@@ -216,19 +219,19 @@ class ProfileContentView(QWidget):
         # ═══════════════════════════════════════════════
         # 3. ACCOUNT SETTINGS
         # ═══════════════════════════════════════════════
-        form = QFrame()
-        form.setObjectName("formCard")
-        form.setStyleSheet("""
-            QFrame#formCard {
-                background-color: #FFFFFF;
+        self.form = QFrame()
+        self.form.setObjectName("formCard")
+        self.form.setStyleSheet(f"""
+            QFrame#formCard {{
+                background-color: {colors.BG_PRIMARY};
                 border: 1px solid #E5E7EB;
                 border-radius: 20px;
-            }
-            QLabel { background:transparent; border:none; }
+            }}
+            QLabel {{ background:transparent; border:none; }}
         """)
-        form.setGraphicsEffect(_shadow(form))
+        self.form.setGraphicsEffect(_shadow(self.form))
 
-        f_lay = QVBoxLayout(form)
+        f_lay = QVBoxLayout(self.form)
         f_lay.setContentsMargins(32, 28, 32, 28)
         f_lay.setSpacing(16)
 
@@ -268,8 +271,36 @@ class ProfileContentView(QWidget):
         btn_row.addStretch()
         f_lay.addLayout(btn_row)
 
-        main.addWidget(form)
+        main.addWidget(self.form)
         main.addStretch()
+
+    def apply_theme(self):
+        """Apply theme dynamically"""
+        colors = self.theme_manager.get_theme()
+        
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        if hasattr(self, 'header'):
+            self.header.setStyleSheet(f"""
+                QFrame#headerCard {{
+                    background-color: {colors.BG_PRIMARY};
+                    border: 1px solid #E5E7EB;
+                    border-radius: 20px;
+                }}
+                QLabel {{ background:transparent; border:none; }}
+            """)
+            
+        if hasattr(self, 'form'):
+            self.form.setStyleSheet(f"""
+                QFrame#formCard {{
+                    background-color: {colors.BG_PRIMARY};
+                    border: 1px solid #E5E7EB;
+                    border-radius: 20px;
+                }}
+                QLabel {{ background:transparent; border:none; }}
+            """)
+            
+        if hasattr(self, 'name_header'):
+            self.name_header.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; letter-spacing:-0.3px;")
 
     # ─── field builder ───────────────────────────────
     def _add_field(self, label_text, icon, parent_layout, multiline=False):

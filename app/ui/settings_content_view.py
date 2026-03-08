@@ -12,7 +12,6 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QFrame,
     QCheckBox,
-    QComboBox,
     QTimeEdit,
     QFileDialog,
     QMessageBox,
@@ -22,7 +21,6 @@ from PySide6.QtCore import Qt, QTime, QPropertyAnimation, QEasingCurve, Property
 from PySide6.QtGui import QFont, QColor, QPainter, QLinearGradient
 from datetime import datetime
 from app.services.settings_service import get_settings_service
-from app.utils.constants import THEME_DARK, THEME_LIGHT
 
 
 class SettingCard(QFrame):
@@ -281,56 +279,7 @@ class SettingsContentView(QWidget):
         self.content_layout.setContentsMargins(40, 28, 40, 28)
         self.content_layout.setSpacing(32)
 
-        # SECTION: Appearance
-        self.add_section_header("🎨", "Appearance", "Customize the look and feel")
 
-        # Theme
-        self.theme_combo = QComboBox()
-        self.theme_combo.addItem("☀️  Light Theme", THEME_LIGHT)
-        self.theme_combo.addItem("🌙  Dark Theme", THEME_DARK)
-        self.theme_combo.setFont(QFont("SF Pro Text", 14))
-        self.theme_combo.setFixedHeight(44)
-        self.theme_combo.setCursor(Qt.PointingHandCursor)
-        self.theme_combo.setStyleSheet("""
-            QComboBox {
-                background-color: #F9FAFB;
-                border: 2px solid #E5E7EB;
-                border-radius: 12px;
-                padding: 8px 16px;
-                min-width: 180px;
-            }
-            QComboBox:hover {
-                border: 2px solid #6366F1;
-                background-color: #FFFFFF;
-            }
-            QComboBox::drop-down {
-                border: none;
-                padding-right: 12px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #FFFFFF;
-                border: 2px solid #E5E7EB;
-                border-radius: 8px;
-                selection-background-color: #EEF2FF;
-                selection-color: #4F46E5;
-            }
-        """)
-
-        theme_card = SettingCard(
-            "🎨", "Theme", "Choose your preferred color theme", self.theme_combo
-        )
-        self.content_layout.addWidget(theme_card)
-
-        # Compact mode
-        # self.compact_check = ToggleSwitch()
-
-        # compact_card = SettingCard(
-        #     "📱",
-        #     "Compact Mode",
-        #     "Show more content with reduced spacing",
-        #     self.compact_check,
-        # )
-        # self.content_layout.addWidget(compact_card)
 
         # SECTION: Notifications
         self.content_layout.addSpacing(12)
@@ -579,14 +528,7 @@ class SettingsContentView(QWidget):
     def load_settings(self):
         """Load current settings"""
         try:
-            # Theme
-            current_theme = self.settings_service.get_theme()
-            index = self.theme_combo.findData(current_theme)
-            if index >= 0:
-                self.theme_combo.setCurrentIndex(index)
 
-            # Compact mode
-            # self.compact_check.setChecked(self.settings_service.get_compact_mode())
 
             # Notifications
             self.notifications_check.setChecked(
@@ -607,12 +549,7 @@ class SettingsContentView(QWidget):
     def save_settings(self):
         """Save all settings"""
         try:
-            # Save theme
-            theme = self.theme_combo.currentData()
-            self.settings_service.set_theme(theme)
 
-            # Save compact mode
-            # self.settings_service.set_compact_mode(self.compact_check.isChecked())
 
             # Save notifications
             self.settings_service.set_notifications_enabled(

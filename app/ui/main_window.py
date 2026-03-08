@@ -16,6 +16,7 @@ from app.services.habit_service import get_habit_service
 from app.services.streak_service import get_streak_service
 from app.services.stats_service import get_stats_service
 from app.services.scheduler_service import get_scheduler_service
+from app.themes import get_theme_manager
 
 
 class MainWindow(QMainWindow):
@@ -30,13 +31,16 @@ class MainWindow(QMainWindow):
         self.streak_service = get_streak_service()
         self.stats_service = get_stats_service()
         self.scheduler = get_scheduler_service()
+        self.theme_manager = get_theme_manager()
+        self.theme_manager.load_preference()
 
         self.setup_ui()
         self.update_status_bar()
 
     def setup_ui(self):
         """Setup the main UI with constant sidebar"""
-        self.setStyleSheet("QMainWindow { background-color: #F9FAFB; }")
+        colors = self.theme_manager.get_theme()
+        self.setStyleSheet(f"QMainWindow {{ background-color: {colors.BG_PRIMARY}; }}")
 
         # Main container widget
         main_container = QWidget()
@@ -52,7 +56,8 @@ class MainWindow(QMainWindow):
 
         # Content area container (this will change)
         self.content_container = QWidget()
-        self.content_container.setStyleSheet("background-color: #F8F9FA;")
+        colors = self.theme_manager.get_theme()
+        self.content_container.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
         self.content_layout = QVBoxLayout(self.content_container)
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(0)
@@ -274,21 +279,23 @@ class MainWindow(QMainWindow):
         _ = self.habit_service.get_all_habits()
         # Stats logic can be expanded here if needed
 
-    def apply_theme(self, theme_name):
+    def apply_theme(self):
         """Apply theme to main window"""
-        from app.utils.themes import get_dark_colors, get_light_colors
+        colors = self.theme_manager.get_theme()
+        self.setStyleSheet(f"QMainWindow {{ background-color: {colors.BG_PRIMARY}; }}")
+        if hasattr(self, 'content_container'):
+            self.content_container.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
 
-        if theme_name == "light":
-            colors = get_light_colors()
-            self.setStyleSheet(
-                f"QMainWindow {{ background-color: {colors['bg_primary']}; }}"
-            )
-        else:
-            colors = get_dark_colors()
-            self.setStyleSheet(
-                f"QMainWindow {{ background-color: {colors['bg_primary']}; }}"
-            )
-
-        # Reload dashboard
-        if hasattr(self, "complete_ui"):
-            self.complete_ui.load_data()
+    def apply_theme_to_all(self):
+        """Update all views with the current theme"""
+        self.apply_theme()
+        
+        if hasattr(self, 'sidebar') and hasattr(self.sidebar, 'apply_theme'):
+            self.sidebar.apply_theme()
+            
+        if hasattr(self, 'content_layout') and self.content_layout.count() > 0:
+            item = self.content_layout.itemAt(0)
+            if item and item.widget():
+                widget = item.widget()
+                if hasattr(widget, 'apply_theme'):
+                    widget.apply_theme()

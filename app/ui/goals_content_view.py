@@ -23,6 +23,7 @@ from PySide6.QtGui import QFont, QColor, QPainter, QPen, QLinearGradient
 from datetime import datetime, timedelta
 from app.services.goal_service import get_goal_service
 from app.services.habit_service import get_habit_service
+from app.themes import get_theme_manager
 
 
 class CircularProgressGoal(QWidget):
@@ -677,29 +678,30 @@ class GoalsContentView(QWidget):
         self.main_window = parent
         self.goal_service = get_goal_service()
         self.habit_service = get_habit_service()
+        self.theme_manager = get_theme_manager()
         self.setup_ui()
         self.load_goals()
 
     def setup_ui(self):
         """Setup goals UI"""
-        self.setStyleSheet("background-color: #F9FAFB;")
+        colors = self.theme_manager.get_theme()
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # Header
-        header = QFrame()
-        header.setMinimumHeight(120)
-        header.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #FFFFFF, stop:1 #F9FAFB);
+        self.header = QFrame()
+        self.header.setMinimumHeight(120)
+        self.header.setStyleSheet(f"""
+            QFrame {{
+                background-color: {colors.BG_PRIMARY};
                 border: none;
-            }
+            }}
         """)
 
-        header_layout = QHBoxLayout(header)
+        header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(40, 24, 40, 24)
 
         # Left: Title
@@ -714,21 +716,21 @@ class GoalsContentView(QWidget):
         title_text_layout = QVBoxLayout()
         title_text_layout.setSpacing(2)
 
-        title = QLabel("Goals & Milestones")
-        title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        title.setStyleSheet(
-            "color: #111827; background: transparent; padding-bottom: 4px;"
+        self.title_label = QLabel("Goals & Milestones")
+        self.title_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
+        self.title_label.setStyleSheet(
+            f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;"
         )
-        title.setWordWrap(True)
-        title_text_layout.addWidget(title)
+        self.title_label.setWordWrap(True)
+        title_text_layout.addWidget(self.title_label)
 
-        subtitle = QLabel("Set targets and track your progress")
-        subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet(
-            "color: #6B7280; background: transparent; padding-bottom: 2px;"
+        self.subtitle_label = QLabel("Set targets and track your progress")
+        self.subtitle_label.setFont(QFont("SF Pro Text", 14))
+        self.subtitle_label.setStyleSheet(
+            f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;"
         )
-        subtitle.setWordWrap(True)
-        title_text_layout.addWidget(subtitle)
+        self.subtitle_label.setWordWrap(True)
+        title_text_layout.addWidget(self.subtitle_label)
 
         title_section.addLayout(title_text_layout)
 
@@ -757,7 +759,7 @@ class GoalsContentView(QWidget):
         new_goal_btn.clicked.connect(self.show_add_goal_dialog)
         header_layout.addWidget(new_goal_btn)
 
-        layout.addWidget(header)
+        layout.addWidget(self.header)
 
         # Content scroll
         scroll = QScrollArea()
@@ -781,14 +783,36 @@ class GoalsContentView(QWidget):
             }
         """)
 
-        content = QWidget()
-        content.setStyleSheet("background-color: #F9FAFB;")
-        self.content_layout = QVBoxLayout(content)
+        self.content = QWidget()
+        self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        self.content_layout = QVBoxLayout(self.content)
         self.content_layout.setContentsMargins(40, 28, 40, 28)
         self.content_layout.setSpacing(24)
 
-        scroll.setWidget(content)
+        scroll.setWidget(self.content)
         layout.addWidget(scroll)
+
+    def apply_theme(self):
+        """Apply the global color theme."""
+        colors = self.theme_manager.get_theme()
+        
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        if hasattr(self, 'header'):
+            self.header.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {colors.BG_PRIMARY};
+                    border: none;
+                }}
+            """)
+            
+        if hasattr(self, 'content'):
+            self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+            
+        if hasattr(self, 'title_label'):
+            self.title_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;")
+            
+        if hasattr(self, 'subtitle_label'):
+            self.subtitle_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;")
 
     def load_goals(self):
         """Load all goals"""

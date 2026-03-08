@@ -21,6 +21,7 @@ from PySide6.QtGui import QFont, QColor, QPainter, QPen, QLinearGradient, QPaint
 from datetime import datetime, timedelta
 from app.services.habit_service import get_habit_service
 from app.services.streak_service import get_streak_service
+from app.themes import get_theme_manager
 
 
 class LineChart(QWidget):
@@ -445,29 +446,30 @@ class AnalyticsContentView(QWidget):
         self.main_window = parent
         self.habit_service = get_habit_service()
         self.streak_service = get_streak_service()
+        self.theme_manager = get_theme_manager()
         self.current_chart_period = "7 days"  # Default
         self.setup_ui()
         self.load_analytics()
 
     def setup_ui(self):
         """Setup analytics UI"""
-        self.setStyleSheet("background-color: #F9FAFB;")
+        colors = self.theme_manager.get_theme()
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        header = QFrame()
-        header.setMinimumHeight(10)
-        header.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #FFFFFF, stop:1 #F9FAFB);
+        self.header = QFrame()
+        self.header.setMinimumHeight(10)
+        self.header.setStyleSheet(f"""
+            QFrame {{
+                background-color: {colors.BG_PRIMARY};
                 border: none;
-            }
+            }}
         """)
 
-        header_layout = QHBoxLayout(header)
+        header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(40, 24, 40, 24)
 
         title_section = QHBoxLayout()
@@ -481,27 +483,27 @@ class AnalyticsContentView(QWidget):
         title_text_layout = QVBoxLayout()
         title_text_layout.setSpacing(2)
 
-        title = QLabel("Analytics")
-        title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        title.setStyleSheet(
-            "color: #111827; background: transparent; padding-bottom: 4px;"
+        self.title_label = QLabel("Analytics")
+        self.title_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
+        self.title_label.setStyleSheet(
+            f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;"
         )
-        title.setWordWrap(True)
-        title_text_layout.addWidget(title)
+        self.title_label.setWordWrap(True)
+        title_text_layout.addWidget(self.title_label)
 
-        subtitle = QLabel("Track your progress and insights")
-        subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet(
-            "color: #6B7280; background: transparent; padding-bottom: 2px;"
+        self.subtitle_label = QLabel("Track your progress and insights")
+        self.subtitle_label.setFont(QFont("SF Pro Text", 14))
+        self.subtitle_label.setStyleSheet(
+            f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;"
         )
-        title_text_layout.addWidget(subtitle)
+        title_text_layout.addWidget(self.subtitle_label)
 
         title_section.addLayout(title_text_layout)
 
         header_layout.addLayout(title_section)
         header_layout.addStretch()
 
-        layout.addWidget(header)
+        layout.addWidget(self.header)
 
         # Content scroll
         scroll = QScrollArea()
@@ -525,14 +527,36 @@ class AnalyticsContentView(QWidget):
             }
         """)
 
-        content = QWidget()
-        content.setStyleSheet("background-color: #F9FAFB;")
-        self.content_layout = QVBoxLayout(content)
+        self.content = QWidget()
+        self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        self.content_layout = QVBoxLayout(self.content)
         self.content_layout.setContentsMargins(40, 28, 40, 28)
         self.content_layout.setSpacing(28)
 
-        scroll.setWidget(content)
+        scroll.setWidget(self.content)
         layout.addWidget(scroll)
+
+    def apply_theme(self):
+        """Apply theme to the view components."""
+        colors = self.theme_manager.get_theme()
+        
+        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        if hasattr(self, 'header'):
+            self.header.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {colors.BG_PRIMARY};
+                    border: none;
+                }}
+            """)
+            
+        if hasattr(self, 'content'):
+            self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+            
+        if hasattr(self, 'title_label'):
+            self.title_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;")
+            
+        if hasattr(self, 'subtitle_label'):
+            self.subtitle_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;")
 
     def load_analytics(self):
         """Load analytics data"""
