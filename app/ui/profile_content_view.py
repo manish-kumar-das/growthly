@@ -42,10 +42,15 @@ def _shadow(parent=None, blur=14, y=3, alpha=10):
 class StatCard(QFrame):
     def __init__(self, icon, value, label, accent, parent=None):
         super().__init__(parent)
+        from app.themes import get_theme_manager
+        self.theme_manager = get_theme_manager()
         self.accent = accent
+        self.icon = icon
+        self.value = value
+        self.label = label
         self.setObjectName("statCard")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self._default_style()
+        
         self.setGraphicsEffect(_shadow(self, blur=12, y=3, alpha=8))
 
         root = QVBoxLayout(self)
@@ -53,48 +58,60 @@ class StatCard(QFrame):
         root.setSpacing(8)
 
         # Icon circle
-        icon_bg = QFrame()
-        icon_bg.setFixedSize(44, 44)
-        icon_bg.setStyleSheet(f"""
-            background-color: {accent}14;
-            border-radius: 12px; border: none;
-        """)
-        ic_lay = QVBoxLayout(icon_bg)
+        self.icon_bg = QFrame()
+        self.icon_bg.setFixedSize(44, 44)
+        ic_lay = QVBoxLayout(self.icon_bg)
         ic_lay.setContentsMargins(0, 0, 0, 0)
         ic_lay.setAlignment(Qt.AlignCenter)
-        ic_lbl = QLabel(icon)
-        ic_lbl.setFont(QFont("SF Pro Display", 20))
-        ic_lbl.setStyleSheet("background:transparent; border:none;")
-        ic_lay.addWidget(ic_lbl)
-        root.addWidget(icon_bg)
+        self.ic_lbl = QLabel(icon)
+        self.ic_lbl.setFont(QFont("SF Pro Display", 20))
+        ic_lay.addWidget(self.ic_lbl)
+        root.addWidget(self.icon_bg)
 
         root.addStretch()
 
         # Value
         self.val_lbl = QLabel(value)
         self.val_lbl.setFont(QFont("SF Pro Display", 26, QFont.Bold))
-        self.val_lbl.setStyleSheet("color:#111827; background:transparent; border:none;")
         root.addWidget(self.val_lbl)
 
         # Label
-        cap = QLabel(label.upper())
-        cap.setFont(QFont("Inter", 10, QFont.DemiBold))
-        cap.setStyleSheet("color:#6B7280; letter-spacing:0.6px; background:transparent; border:none;")
-        root.addWidget(cap)
+        self.cap = QLabel(label.upper())
+        self.cap.setFont(QFont("Inter", 10, QFont.DemiBold))
+        root.addWidget(self.cap)
+        
+        self.apply_theme()
 
-    def _default_style(self):
-        self.setStyleSheet("""
-            QFrame#statCard {
-                background-color: #FFFFFF;
-                border: 1px solid #E5E7EB;
-                border-radius: 16px;
-            }
-        """)
-
-    def enterEvent(self, ev):
+    def apply_theme(self):
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_card = "#2A2D38" if is_dark else "#FFFFFF"
+        border_color = "#333645" if is_dark else "#E5E7EB"
+        text_val = "#F3F4F6" if is_dark else "#111827"
+        text_cap = "#9CA3AF" if is_dark else "#6B7280"
+        
         self.setStyleSheet(f"""
             QFrame#statCard {{
-                background-color: #FFFFFF;
+                background-color: {bg_card};
+                border: 1px solid {border_color};
+                border-radius: 16px;
+            }}
+        """)
+        
+        self.icon_bg.setStyleSheet(f"""
+            background-color: {self.accent}14;
+            border-radius: 12px; border: none;
+        """)
+        
+        self.ic_lbl.setStyleSheet("background:transparent; border:none;")
+        self.val_lbl.setStyleSheet(f"color:{text_val}; background:transparent; border:none;")
+        self.cap.setStyleSheet(f"color:{text_cap}; letter-spacing:0.6px; background:transparent; border:none;")
+
+    def enterEvent(self, ev):
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_card = "#2A2D38" if is_dark else "#FFFFFF"
+        self.setStyleSheet(f"""
+            QFrame#statCard {{
+                background-color: {bg_card};
                 border: 1px solid {self.accent}40;
                 border-radius: 16px;
             }}
@@ -102,7 +119,7 @@ class StatCard(QFrame):
         super().enterEvent(ev)
 
     def leaveEvent(self, ev):
-        self._default_style()
+        self.apply_theme()
         super().leaveEvent(ev)
 
 
@@ -131,12 +148,15 @@ class ProfileContentView(QWidget):
         # ═══════════════════════════════════════════════
         # 1. HEADER — Avatar + Name only
         # ═══════════════════════════════════════════════
+        is_dark = self.theme_manager.is_dark_mode()
         self.header = QFrame()
         self.header.setObjectName("headerCard")
+        bg_card = "#252732" if is_dark else colors.BG_PRIMARY
+        border_card = "#333645" if is_dark else "#E5E7EB"
         self.header.setStyleSheet(f"""
             QFrame#headerCard {{
-                background-color: {colors.BG_PRIMARY};
-                border: 1px solid #E5E7EB;
+                background-color: {bg_card};
+                border: 1px solid {border_card};
                 border-radius: 20px;
             }}
             QLabel {{ background:transparent; border:none; }}
@@ -161,9 +181,11 @@ class ProfileContentView(QWidget):
         self.av_label.setFixedSize(90, 90)
         self.av_label.setAlignment(Qt.AlignCenter)
         self.av_label.setScaledContents(True)
-        self.av_label.setStyleSheet("""
-            background-color: #F3F4F6;
-            border: 2px solid #E5E7EB;
+        av_bg = "#252732" if is_dark else "#F3F4F6"
+        av_border = "#333645" if is_dark else "#E5E7EB"
+        self.av_label.setStyleSheet(f"""
+            background-color: {av_bg};
+            border: 2px solid {av_border};
             border-radius: 45px;
         """)
         
@@ -204,7 +226,8 @@ class ProfileContentView(QWidget):
         # Name
         self.name_header = QLabel("Loading…")
         self.name_header.setFont(QFont("SF Pro Display", 30, QFont.Bold))
-        self.name_header.setStyleSheet("color:#111827; letter-spacing:-0.3px;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        self.name_header.setStyleSheet(f"color:{text_primary}; letter-spacing:-0.3px;")
         h_lay.addWidget(self.name_header, stretch=1)
 
         main.addWidget(self.header)
@@ -221,10 +244,12 @@ class ProfileContentView(QWidget):
         # ═══════════════════════════════════════════════
         self.form = QFrame()
         self.form.setObjectName("formCard")
+        bg_form = "#252732" if is_dark else colors.BG_PRIMARY
+        border_form = "#333645" if is_dark else "#E5E7EB"
         self.form.setStyleSheet(f"""
             QFrame#formCard {{
-                background-color: {colors.BG_PRIMARY};
-                border: 1px solid #E5E7EB;
+                background-color: {bg_form};
+                border: 1px solid {border_form};
                 border-radius: 20px;
             }}
             QLabel {{ background:transparent; border:none; }}
@@ -235,16 +260,18 @@ class ProfileContentView(QWidget):
         f_lay.setContentsMargins(32, 28, 32, 28)
         f_lay.setSpacing(16)
 
-        title = QLabel("Account Settings")
-        title.setFont(QFont("SF Pro Display", 22, QFont.DemiBold))
-        title.setStyleSheet("color:#111827;")
-        f_lay.addWidget(title)
+        self.form_title = QLabel("Account Settings")
+        self.form_title.setFont(QFont("SF Pro Display", 22, QFont.DemiBold))
+        title_color = "#F3F4F6" if is_dark else "#111827"
+        self.form_title.setStyleSheet(f"color:{title_color};")
+        f_lay.addWidget(self.form_title)
 
         # Input fields
+        self.fields_containers = {}
         self.inputs = {}
-        self.inputs["name"] = self._add_field("Full Display Name", "👤", f_lay)
-        self.inputs["email"] = self._add_field("Email Address", "📧", f_lay)
-        self.inputs["bio"] = self._add_field("Short Bio", "📝", f_lay, multiline=True)
+        self.inputs["name"] = self._add_field("name", "Full Display Name", "👤", f_lay)
+        self.inputs["email"] = self._add_field("email", "Email Address", "📧", f_lay)
+        self.inputs["bio"] = self._add_field("bio", "Short Bio", "📝", f_lay, multiline=True)
 
         # Save button
         btn_row = QHBoxLayout()
@@ -255,16 +282,20 @@ class ProfileContentView(QWidget):
         self.save_btn.setFixedHeight(44)
         self.save_btn.setFont(QFont("Inter", 13, QFont.Bold))
         self.save_btn.setCursor(Qt.PointingHandCursor)
-        self.save_btn.setStyleSheet("""
-            QPushButton {
+        # Saturated vibrant purple gradient identity
+        grad_start = "#4450E6" if is_dark else "#7C3AED"
+        grad_end = "#5B7CFF" if is_dark else "#6D28D9"
+        
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #7C3AED, stop:1 #6D28D9);
+                    stop:0 {grad_start}, stop:1 {grad_end});
                 color: #FFFFFF; border: none; border-radius: 22px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #8B5CF6, stop:1 #7C3AED);
-            }
+                    stop:0 #5C6BC0, stop:1 #4A5FCF);
+            }}
         """)
         self.save_btn.clicked.connect(self.save_profile)
         btn_row.addWidget(self.save_btn)
@@ -277,13 +308,20 @@ class ProfileContentView(QWidget):
     def apply_theme(self):
         """Apply theme dynamically"""
         colors = self.theme_manager.get_theme()
+        is_dark = self.theme_manager.is_dark_mode()
         
-        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        bg_page = "#1A1C23" if is_dark else colors.BG_PRIMARY
+        bg_card = "#252732" if is_dark else colors.BG_PRIMARY
+        border_color = "#333645" if is_dark else "#E5E7EB"
+        text_primary = "#F3F4F6" if is_dark else colors.TEXT_PRIMARY
+        
+        self.setStyleSheet(f"background-color: {bg_page};")
+        
         if hasattr(self, 'header'):
             self.header.setStyleSheet(f"""
                 QFrame#headerCard {{
-                    background-color: {colors.BG_PRIMARY};
-                    border: 1px solid #E5E7EB;
+                    background-color: {bg_card};
+                    border: 1px solid {border_color};
                     border-radius: 20px;
                 }}
                 QLabel {{ background:transparent; border:none; }}
@@ -292,35 +330,93 @@ class ProfileContentView(QWidget):
         if hasattr(self, 'form'):
             self.form.setStyleSheet(f"""
                 QFrame#formCard {{
-                    background-color: {colors.BG_PRIMARY};
-                    border: 1px solid #E5E7EB;
+                    background-color: {bg_card};
+                    border: 1px solid {border_color};
                     border-radius: 20px;
                 }}
                 QLabel {{ background:transparent; border:none; }}
             """)
             
         if hasattr(self, 'name_header'):
-            self.name_header.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; letter-spacing:-0.3px;")
+            self.name_header.setStyleSheet(f"color: {text_primary}; letter-spacing:-0.3px;")
+            
+        if hasattr(self, 'form_title'):
+            self.form_title.setStyleSheet(f"color: {text_primary};")
+
+        # Refresh metric cards
+        for i in range(self.stats_row.count()):
+            item = self.stats_row.itemAt(i)
+            if item and item.widget():
+                item.widget().apply_theme()
+        
+        # Refresh inputs
+        if hasattr(self, 'fields_containers'):
+            for field_name in ["name", "email", "bio"]:
+                if field_name in self.fields_containers:
+                    container, ic, edit, lbl = self.fields_containers[field_name]
+                    bg_input = "#1A1C23" if is_dark else "#FFFFFF"
+                    border_input = "#333645" if is_dark else "#E5E7EB"
+                    container.setStyleSheet(f"""
+                        QFrame#inputRow {{
+                            background-color: {bg_input};
+                            border: 1.5px solid {border_input};
+                            border-radius: 12px;
+                        }}
+                        QFrame#inputRow:hover {{ border: 1.5px solid {"#4450E6" if is_dark else "#D1D5DB"}; }}
+                    """)
+                    
+                    ic_bg = "rgba(255, 255, 255, 0.05)" if is_dark else "transparent"
+                    ic.setStyleSheet(f"color:#9CA3AF; background:{ic_bg}; border-radius:4px;")
+                    
+                    text_input = "#9CA3AF" if is_dark else "#1E293B"
+                    edit.setStyleSheet(f"border:none; background:transparent; font-size:14px; color:{text_input}; font-family:Inter;")
+                    
+                    label_color = "#9CA3AF" if is_dark else "#6B7280"
+                    lbl.setStyleSheet(f"color:{label_color}; letter-spacing:0.5px;")
+
+        # Refresh save button
+        orig = self.save_btn.text()
+        if "✓" not in orig: # Only if not in saved state
+            grad_start = "#4450E6" if is_dark else "#7C3AED"
+            grad_end = "#5B7CFF" if is_dark else "#6D28D9"
+            self.save_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                        stop:0 {grad_start}, stop:1 {grad_end});
+                    color: #FFFFFF; border: none; border-radius: 22px;
+                }}
+                QPushButton:hover {{
+                    background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
+                        stop:0 #5C6BC0, stop:1 #4A5FCF);
+                }}
+            """)
 
     # ─── field builder ───────────────────────────────
-    def _add_field(self, label_text, icon, parent_layout, multiline=False):
+    def _add_field(self, field_id, label_text, icon, parent_layout, multiline=False):
+        if not hasattr(self, 'fields_containers'):
+            self.fields_containers = {}
+            
+        is_dark = self.theme_manager.is_dark_mode()
         group = QVBoxLayout()
         group.setSpacing(4)
 
         lbl = QLabel(label_text.upper())
         lbl.setFont(QFont("Inter", 10, QFont.Bold))
-        lbl.setStyleSheet("color:#6B7280; letter-spacing:0.5px;")
+        label_color = "#9CA3AF" if is_dark else "#6B7280"
+        lbl.setStyleSheet(f"color:{label_color}; letter-spacing:0.5px;")
         group.addWidget(lbl)
 
         container = QFrame()
         container.setObjectName("inputRow")
-        container.setStyleSheet("""
-            QFrame#inputRow {
-                background-color: #FFFFFF;
-                border: 1.5px solid #E5E7EB;
+        bg_input = "#1A1C23" if is_dark else "#FFFFFF"
+        border_input = "#333645" if is_dark else "#E5E7EB"
+        container.setStyleSheet(f"""
+            QFrame#inputRow {{
+                background-color: {bg_input};
+                border: 1.5px solid {border_input};
                 border-radius: 12px;
-            }
-            QFrame#inputRow:hover { border: 1.5px solid #D1D5DB; }
+            }}
+            QFrame#inputRow:hover {{ border: 1.5px solid {"#4450E6" if is_dark else "#D1D5DB"}; }}
         """)
 
         row = QHBoxLayout(container)
@@ -329,10 +425,13 @@ class ProfileContentView(QWidget):
 
         ic = QLabel(icon)
         ic.setFont(QFont("SF Pro Display", 15))
-        ic.setStyleSheet("color:#9CA3AF;")
-        ic.setFixedWidth(22)
+        ic_bg = "rgba(255, 255, 255, 0.05)" if is_dark else "transparent"
+        ic.setStyleSheet(f"color:#9CA3AF; background:{ic_bg}; border-radius:4px;")
+        ic.setFixedWidth(26)
+        ic.setAlignment(Qt.AlignCenter)
         row.addWidget(ic)
 
+        text_color = "#9CA3AF" if is_dark else "#1E293B"
         if multiline:
             container.setFixedHeight(64)
             row.setAlignment(Qt.AlignTop)
@@ -340,18 +439,19 @@ class ProfileContentView(QWidget):
             edit = QTextEdit()
             edit.setFixedHeight(48)
             edit.setStyleSheet(
-                "border:none; background:transparent; font-size:14px; color:#1E293B; font-family:Inter;"
+                f"border:none; background:transparent; font-size:14px; color:{text_color}; font-family:Inter;"
             )
         else:
             edit = QLineEdit()
             edit.setFixedHeight(40)
             edit.setStyleSheet(
-                "border:none; background:transparent; font-size:14px; color:#1E293B; font-family:Inter;"
+                f"border:none; background:transparent; font-size:14px; color:{text_color}; font-family:Inter;"
             )
 
         row.addWidget(edit, stretch=1)
         group.addWidget(container)
         parent_layout.addLayout(group)
+        self.fields_containers[field_id] = (container, ic, edit, lbl)
         return edit
 
     # ─── data ────────────────────────────────────────
@@ -365,11 +465,13 @@ class ProfileContentView(QWidget):
         self._refresh_stats()
 
     def set_avatar_image(self, path):
+        is_dark = self.theme_manager.is_dark_mode()
+        av_border = "#333645" if is_dark else "#E5E7EB"
         if path and os.path.exists(path):
             pix = get_circular_pixmap(path, 90)
             if pix:
                 self.av_label.setPixmap(pix)
-                self.av_label.setStyleSheet("background: transparent; border: 1px solid #E5E7EB; border-radius: 45px;")
+                self.av_label.setStyleSheet(f"background: transparent; border: 1px solid {av_border}; border-radius: 45px;")
                 self.av_icon.hide()
             else:
                 self.av_icon.show()
@@ -380,9 +482,12 @@ class ProfileContentView(QWidget):
             self._reset_avatar_style()
 
     def _reset_avatar_style(self):
-        self.av_label.setStyleSheet("""
-            background-color: #F3F4F6;
-            border: 2px solid #E5E7EB;
+        is_dark = self.theme_manager.is_dark_mode()
+        av_bg = "#252732" if is_dark else "#F3F4F6"
+        av_border = "#333645" if is_dark else "#E5E7EB"
+        self.av_label.setStyleSheet(f"""
+            background-color: {av_bg};
+            border: 2px solid {av_border};
             border-radius: 45px;
         """)
 
@@ -457,15 +562,19 @@ class ProfileContentView(QWidget):
             QMessageBox.critical(self, "Error", f"Unexpected error: {str(e)}")
 
     def _reset_btn(self, text):
+        is_dark = self.theme_manager.is_dark_mode()
         self.save_btn.setText(text)
-        self.save_btn.setStyleSheet("""
-            QPushButton {
+        grad_start = "#4450E6" if is_dark else "#7C3AED"
+        grad_end = "#5B7CFF" if is_dark else "#6D28D9"
+        
+        self.save_btn.setStyleSheet(f"""
+            QPushButton {{
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #7C3AED, stop:1 #6D28D9);
+                    stop:0 {grad_start}, stop:1 {grad_end});
                 color:#FFFFFF; border:none; border-radius:22px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0,y1:0,x2:1,y2:0,
-                    stop:0 #8B5CF6, stop:1 #7C3AED);
-            }
+                    stop:0 #5C6BC0, stop:1 #4A5FCF);
+            }}
         """)

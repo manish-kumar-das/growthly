@@ -96,12 +96,17 @@ class LineChart(QWidget):
         for i, value in enumerate(reversed(scale_values)):
             y = margin_top + (chart_height * i / (num_lines - 1))
 
+            from app.themes import get_theme_manager
+            is_dark = get_theme_manager().is_dark_mode()
+            
             # Grid line
-            painter.setPen(QPen(QColor("#E5E7EB"), 1))
+            grid_color = QColor("#4B5563") if is_dark else QColor("#E5E7EB")
+            painter.setPen(QPen(grid_color, 1))
             painter.drawLine(margin_left, int(y), self.width() - margin_right, int(y))
 
             # Y-axis label
-            painter.setPen(QColor("#6B7280"))
+            label_color = QColor("#9CA3AF") if is_dark else QColor("#6B7280")
+            painter.setPen(label_color)
             painter.setFont(QFont("Inter", 11))
             text_rect = QRect(5, int(y) - 10, margin_left - 10, 20)
             painter.drawText(text_rect, Qt.AlignRight | Qt.AlignVCenter, str(value))
@@ -124,12 +129,22 @@ class LineChart(QWidget):
             # Draw gradient fill
             # Use brand gradient with transparency
             brand_gradient = QLinearGradient(0, margin_top, 0, margin_top + chart_height)
+            from app.themes import get_theme_manager
+            is_dark = get_theme_manager().is_dark_mode()
+            
+            fill_alpha = 76 if is_dark else 100 # ~30% alpha for dark mode (76/255) vs original ~40% (100 is original code)
+            # Actually the request says increase opacity to 30% from 10%.
+            # Let's use 77 (30%) for dark and maybe 26 (10%) for light.
+            
+            alpha_top = 77 if is_dark else 26
+            alpha_bottom = 26 if is_dark else 5
+            
             brand_gradient.setColorAt(
-                0, QColor(102, 126, 234, 100)
-            )  # #667eea (alpha 100/255)
+                0, QColor(102, 126, 234, alpha_top)
+            )  # #667eea
             brand_gradient.setColorAt(
-                1, QColor(240, 147, 251, 20)
-            )  # #f093fb (alpha 20/255)
+                1, QColor(240, 147, 251, alpha_bottom)
+            )  # #f093fb
 
             fill_path = QPainterPath()
             fill_path.moveTo(points[0][0], margin_top + chart_height)
@@ -180,11 +195,15 @@ class LineChart(QWidget):
 
                 # Pill background
                 painter.setPen(Qt.NoPen)
-                painter.setBrush(QColor("#F1F5F9"))
+                from app.themes import get_theme_manager
+                is_dark = get_theme_manager().is_dark_mode()
+                pill_bg = QColor("#2C2F3A") if is_dark else QColor("#F1F5F9")
+                painter.setBrush(pill_bg)
                 painter.drawRoundedRect(pill_x, pill_y, pill_w, pill_h, pill_h / 2, pill_h / 2)
 
                 # Label text
-                painter.setPen(QColor("#64748B"))
+                label_color = QColor("#9CA3AF") if is_dark else QColor("#64748B")
+                painter.setPen(label_color)
                 painter.setBrush(Qt.NoBrush)
                 text_rect = QRect(pill_x, pill_y, pill_w, pill_h)
                 painter.drawText(text_rect, Qt.AlignCenter, label)
@@ -261,12 +280,17 @@ class BarChart(QWidget):
         for i, value in enumerate(reversed(scale_values)):
             y = margin_top + (chart_height * i / (num_lines - 1))
 
+            from app.themes import get_theme_manager
+            is_dark = get_theme_manager().is_dark_mode()
+            
             # Grid line
-            painter.setPen(QPen(QColor("#E5E7EB"), 1))
+            grid_color = QColor("#4B5563") if is_dark else QColor("#E5E7EB")
+            painter.setPen(QPen(grid_color, 1))
             painter.drawLine(margin_left, int(y), self.width() - margin_right, int(y))
 
             # Y-axis label
-            painter.setPen(QColor("#6B7280"))
+            label_color = QColor("#9CA3AF") if is_dark else QColor("#6B7280")
+            painter.setPen(label_color)
             painter.setFont(QFont("Inter", 11))
             text_rect = QRect(5, int(y) - 10, margin_left - 10, 20)
             painter.drawText(text_rect, Qt.AlignRight | Qt.AlignVCenter, str(value))
@@ -290,7 +314,8 @@ class BarChart(QWidget):
 
             # Draw value on top
             if value > 0:
-                painter.setPen(QColor("#4F46E5"))
+                text_color = QColor("#8B5CF6") if is_dark else QColor("#4F46E5")
+                painter.setPen(text_color)
                 painter.setFont(QFont("SF Pro Text", 10, QFont.Bold))
                 painter.drawText(
                     int(x),
@@ -323,11 +348,15 @@ class BarChart(QWidget):
 
                 # Pill background
                 painter.setPen(Qt.NoPen)
-                painter.setBrush(QColor("#F1F5F9"))
+                from app.themes import get_theme_manager
+                is_dark = get_theme_manager().is_dark_mode()
+                pill_bg = QColor("#2C2F3A") if is_dark else QColor("#F1F5F9")
+                painter.setBrush(pill_bg)
                 painter.drawRoundedRect(pill_x, pill_y, pill_w, pill_h, pill_h / 2, pill_h / 2)
 
                 # Label text
-                painter.setPen(QColor("#64748B"))
+                label_color = QColor("#9CA3AF") if is_dark else QColor("#64748B")
+                painter.setPen(label_color)
                 painter.setBrush(Qt.NoBrush)
                 text_rect = QRect(pill_x, pill_y, pill_w, pill_h)
                 painter.drawText(text_rect, Qt.AlignCenter, label)
@@ -356,18 +385,26 @@ class StatCard(QFrame):
         self.setFixedHeight(180)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        
+        # Identity gradient colors - saturate by 10% for dark mode
+        # Original: #667eea, #764ba2, #f093fb
+        # Saturated: #5069f2, #7d44cf, #f682ff
+        grad_colors = ["#5069f2", "#7d44cf", "#f682ff"] if is_dark else ["#667eea", "#764ba2", "#f093fb"]
+
         self.setObjectName("statCard")
-        self.setStyleSheet("""
-            QFrame#statCard {
+        self.setStyleSheet(f"""
+            QFrame#statCard {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+                    stop:0 {grad_colors[0]}, stop:0.5 {grad_colors[1]}, stop:1 {grad_colors[2]});
                 border-radius: 24px;
                 border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-            QLabel {
+            }}
+            QLabel {{
                 border: none;
                 background: transparent;
-            }
+            }}
         """)
 
         # Softer, more premium shadow
@@ -453,8 +490,9 @@ class AnalyticsContentView(QWidget):
 
     def setup_ui(self):
         """Setup analytics UI"""
-        colors = self.theme_manager.get_theme()
-        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_primary = "#1A1C23" if is_dark else "#FFFFFF"
+        self.setStyleSheet(f"background-color: {bg_primary};")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -462,9 +500,11 @@ class AnalyticsContentView(QWidget):
 
         self.header = QFrame()
         self.header.setMinimumHeight(10)
+        is_dark = self.theme_manager.is_dark_mode()
+        header_bg = "#1A1C23" if is_dark else "#FFFFFF"
         self.header.setStyleSheet(f"""
             QFrame {{
-                background-color: {colors.BG_PRIMARY};
+                background-color: {header_bg};
                 border: none;
             }}
         """)
@@ -485,16 +525,18 @@ class AnalyticsContentView(QWidget):
 
         self.title_label = QLabel("Analytics")
         self.title_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
+        text_primary = "#F3F4F6" if is_dark else "#111827"
         self.title_label.setStyleSheet(
-            f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;"
+            f"color: {text_primary}; background: transparent; padding-bottom: 4px;"
         )
         self.title_label.setWordWrap(True)
         title_text_layout.addWidget(self.title_label)
 
         self.subtitle_label = QLabel("Track your progress and insights")
         self.subtitle_label.setFont(QFont("SF Pro Text", 14))
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
         self.subtitle_label.setStyleSheet(
-            f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;"
+            f"color: {text_secondary}; background: transparent; padding-bottom: 2px;"
         )
         title_text_layout.addWidget(self.subtitle_label)
 
@@ -528,7 +570,9 @@ class AnalyticsContentView(QWidget):
         """)
 
         self.content = QWidget()
-        self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        is_dark = self.theme_manager.is_dark_mode()
+        content_bg = "#1A1C23" if is_dark else "#FFFFFF"
+        self.content.setStyleSheet(f"background-color: {content_bg};")
         self.content_layout = QVBoxLayout(self.content)
         self.content_layout.setContentsMargins(40, 28, 40, 28)
         self.content_layout.setSpacing(28)
@@ -538,25 +582,28 @@ class AnalyticsContentView(QWidget):
 
     def apply_theme(self):
         """Apply theme to the view components."""
-        colors = self.theme_manager.get_theme()
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_primary = "#1A1C23" if is_dark else "#FFFFFF"
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
         
-        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        self.setStyleSheet(f"background-color: {bg_primary};")
         if hasattr(self, 'header'):
             self.header.setStyleSheet(f"""
                 QFrame {{
-                    background-color: {colors.BG_PRIMARY};
+                    background-color: {bg_primary};
                     border: none;
                 }}
             """)
             
         if hasattr(self, 'content'):
-            self.content.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+            self.content.setStyleSheet(f"background-color: {bg_primary};")
             
         if hasattr(self, 'title_label'):
-            self.title_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;")
+            self.title_label.setStyleSheet(f"color: {text_primary}; background: transparent; padding-bottom: 4px;")
             
         if hasattr(self, 'subtitle_label'):
-            self.subtitle_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;")
+            self.subtitle_label.setStyleSheet(f"color: {text_secondary}; background: transparent; padding-bottom: 2px;")
 
     def load_analytics(self):
         """Load analytics data"""
@@ -793,12 +840,15 @@ class AnalyticsContentView(QWidget):
         """Add interactive graphs section"""
         # Graph container
         graph_container = QFrame()
-        graph_container.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 1px solid #F3F4F6;
+        is_dark = self.theme_manager.is_dark_mode()
+        container_bg = "#252732" if is_dark else "#FFFFFF"
+        border_color = "#333645" if is_dark else "#F3F4F6"
+        graph_container.setStyleSheet(f"""
+            QFrame {{
+                background-color: {container_bg};
+                border: 1px solid {border_color};
                 border-radius: 24px;
-            }
+            }}
         """)
 
         shadow = QGraphicsDropShadowEffect()
@@ -816,8 +866,9 @@ class AnalyticsContentView(QWidget):
 
         graph_title = QLabel("📈 Completion Trend")
         graph_title.setFont(QFont("SF Pro Display", 24, QFont.Bold))
+        title_color = "#F3F4F6" if is_dark else "#111827"
         graph_title.setStyleSheet(
-            "color: #111827; background: transparent; border: none;"
+            f"color: {title_color}; background: transparent; border: none;"
         )
         graph_header.addWidget(graph_title)
 
@@ -826,8 +877,9 @@ class AnalyticsContentView(QWidget):
         # Period buttons
         period_label = QLabel("Period:")
         period_label.setFont(QFont("SF Pro Text", 14, QFont.Medium))
+        secondary_color = "#9CA3AF" if is_dark else "#6B7280"
         period_label.setStyleSheet(
-            "color: #6B7280; background: transparent; border: none;"
+            f"color: {secondary_color}; background: transparent; border: none;"
         )
         graph_header.addWidget(period_label)
 
@@ -838,29 +890,31 @@ class AnalyticsContentView(QWidget):
         self.period_combo.setCurrentText("7 days")
         self.period_combo.setFont(QFont("SF Pro Text", 13))
         self.period_combo.setFixedHeight(40)
-        self.period_combo.setStyleSheet("""
-            QComboBox {
-                background-color: #F9FAFB;
-                border: 2px solid #E5E7EB;
+        self.period_combo.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {"#2C2F3A" if is_dark else "#F9FAFB"};
+                border: 2px solid {"#333645" if is_dark else "#E5E7EB"};
                 border-radius: 10px;
                 padding: 6px 16px;
                 min-width: 120px;
-            }
-            QComboBox:hover {
+                color: {"#F3F4F6" if is_dark else "#111827"};
+            }}
+            QComboBox:hover {{
                 border: 2px solid #6366F1;
-                background-color: #FFFFFF;
-            }
-            QComboBox::drop-down {
+                background-color: {"#333645" if is_dark else "#FFFFFF"};
+            }}
+            QComboBox::drop-down {{
                 border: none;
                 padding-right: 10px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #FFFFFF;
-                border: 2px solid #E5E7EB;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {"#252732" if is_dark else "#FFFFFF"};
+                border: 2px solid {"#333645" if is_dark else "#E5E7EB"};
                 border-radius: 8px;
                 selection-background-color: #EEF2FF;
                 selection-color: #4F46E5;
-            }
+                color: {"#F3F4F6" if is_dark else "#111827"};
+            }}
         """)
         self.period_combo.currentTextChanged.connect(self.update_graph)
         graph_header.addWidget(self.period_combo)
@@ -876,26 +930,26 @@ class AnalyticsContentView(QWidget):
         line_btn.setFont(QFont("SF Pro Text", 12, QFont.Medium))
         line_btn.setChecked(True)
         line_btn.setCursor(Qt.PointingHandCursor)
-        line_btn.setStyleSheet("""
-            QRadioButton {
-                color: #4B5563;
-                background-color: #F3F4F6;
+        line_btn.setStyleSheet(f"""
+            QRadioButton {{
+                color: {"#71717A" if is_dark else "#4B5563"};
+                background-color: {"#2C2F3A" if is_dark else "#F3F4F6"};
                 padding: 8px 18px;
                 border-radius: 18px;
-                border: 1px solid #E5E7EB;
-            }
-            QRadioButton::indicator {
+                border: 1px solid {"#333645" if is_dark else "#E5E7EB"};
+            }}
+            QRadioButton::indicator {{
                 width: 0px;
                 height: 0px;
-            }
-            QRadioButton:checked {
+            }}
+            QRadioButton:checked {{
                 background-color: #6366F1;
                 color: white;
                 border: 1px solid #4F46E5;
-            }
-            QRadioButton:hover:!checked {
-                background-color: #E5E7EB;
-            }
+            }}
+            QRadioButton:hover:!checked {{
+                background-color: {"#333645" if is_dark else "#E5E7EB"};
+            }}
         """)
         self.chart_type_group.addButton(line_btn, 0)
         chart_type_layout.addWidget(line_btn)
@@ -903,26 +957,26 @@ class AnalyticsContentView(QWidget):
         bar_btn = QRadioButton("Bar Chart")
         bar_btn.setFont(QFont("SF Pro Text", 12, QFont.Medium))
         bar_btn.setCursor(Qt.PointingHandCursor)
-        bar_btn.setStyleSheet("""
-            QRadioButton {
-                color: #4B5563;
-                background-color: #F3F4F6;
+        bar_btn.setStyleSheet(f"""
+            QRadioButton {{
+                color: {"#71717A" if is_dark else "#4B5563"};
+                background-color: {"#2C2F3A" if is_dark else "#F3F4F6"};
                 padding: 8px 18px;
                 border-radius: 18px;
-                border: 1px solid #E5E7EB;
-            }
-            QRadioButton::indicator {
+                border: 1px solid {"#333645" if is_dark else "#E5E7EB"};
+            }}
+            QRadioButton::indicator {{
                 width: 0px;
                 height: 0px;
-            }
-            QRadioButton:checked {
+            }}
+            QRadioButton:checked {{
                 background-color: #6366F1;
                 color: white;
                 border: 1px solid #4F46E5;
-            }
-            QRadioButton:hover:!checked {
-                background-color: #E5E7EB;
-            }
+            }}
+            QRadioButton:hover:!checked {{
+                background-color: {"#333645" if is_dark else "#E5E7EB"};
+            }}
         """)
         self.chart_type_group.addButton(bar_btn, 1)
         chart_type_layout.addWidget(bar_btn)
@@ -950,12 +1004,15 @@ class AnalyticsContentView(QWidget):
         comparison_card = QFrame()
         comparison_card.setObjectName("comparisonCard")
         comparison_card.setMinimumHeight(200)
-        comparison_card.setStyleSheet("""
-            QFrame#comparisonCard {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        container_bg = "#252732" if is_dark else "#FFFFFF"
+        border_color = "#333645" if is_dark else "none"
+        comparison_card.setStyleSheet(f"""
+            QFrame#comparisonCard {{
+                background-color: {container_bg};
                 border-radius: 20px;
-                border: none;
-            }
+                border: 1px solid {border_color};
+            }}
         """)
 
         shadow = QGraphicsDropShadowEffect()
@@ -971,7 +1028,8 @@ class AnalyticsContentView(QWidget):
         # TITLE
         title = QLabel("📊 This Week vs Last Week")
         title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        title.setStyleSheet("color: #111827; background: transparent; border: none;")
+        title_color = "#F3F4F6" if is_dark else "#111827"
+        title.setStyleSheet(f"color: {title_color}; background: transparent; border: none;")
         layout.addWidget(title)
 
         # GET DATA
@@ -1009,15 +1067,17 @@ class AnalyticsContentView(QWidget):
 
         last_label = QLabel("Last Week")
         last_label.setFont(QFont("SF Pro Text", 12))
+        secondary_color = "#9CA3AF" if is_dark else "#6B7280"
         last_label.setStyleSheet(
-            "color: #6B7280; background-color: #FFFFFF; border: none;"
+            f"color: {secondary_color}; background-color: transparent; border: none;"
         )
         last_label.setAlignment(Qt.AlignCenter)
 
         last_value = QLabel(str(last_week))
         last_value.setFont(QFont("SF Pro Display", 36, QFont.Bold))
+        text_primary = "#F3F4F6" if is_dark else "#111827"
         last_value.setStyleSheet(
-            "color: #111827; background-color: #FFFFFF; border: none;"
+            f"color: {text_primary}; background-color: transparent; border: none;"
         )
         last_value.setAlignment(Qt.AlignCenter)
 
@@ -1027,7 +1087,7 @@ class AnalyticsContentView(QWidget):
         # Arrow
         arrow = QLabel("→")
         arrow.setFont(QFont("SF Pro Display", 24))
-        arrow.setStyleSheet("color: #9CA3AF; background-color: #FFFFFF; border: none;")
+        arrow.setStyleSheet("color: #9CA3AF; background-color: transparent; border: none;")
 
         # This Week
         this_layout = QVBoxLayout()
@@ -1036,14 +1096,14 @@ class AnalyticsContentView(QWidget):
         this_label = QLabel("This Week")
         this_label.setFont(QFont("SF Pro Text", 12))
         this_label.setStyleSheet(
-            "color: #6B7280; background-color: #FFFFFF; border: none;"
+            f"color: {secondary_color}; background-color: transparent; border: none;"
         )
         this_label.setAlignment(Qt.AlignCenter)
 
         this_value = QLabel(str(this_week))
         this_value.setFont(QFont("SF Pro Display", 36, QFont.Bold))
         this_value.setStyleSheet(
-            "color: #111827; background-color: #FFFFFF; border: none;"
+            f"color: {text_primary}; background-color: transparent; border: none;"
         )
         this_value.setAlignment(Qt.AlignCenter)
 
@@ -1072,35 +1132,41 @@ class AnalyticsContentView(QWidget):
 
         if diff > 0:
             badge.setText(f"📈 +{diff} ({percent_change:+d}%)")
-            badge.setStyleSheet("""
-                QLabel {
-                    background-color: #DCFCE7;
-                    color: #166534;
+            badge_bg = "#166534" if is_dark else "#DCFCE7"
+            badge_text = "#4ADE80" if is_dark else "#166534"
+            badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {badge_bg};
+                    color: {badge_text};
                     border-radius: 18px;
                     padding: 8px 20px;
-                }
+                }}
             """)
             insight_text = "🚀 Great job! You're building momentum. Keep it up!"
         elif diff < 0:
             badge.setText(f"📉 {diff} ({percent_change:+d}%)")
-            badge.setStyleSheet("""
-                QLabel {
-                    background-color: #FEE2E2;
-                    color: #991B1B;
+            badge_bg = "#7F1D1D" if is_dark else "#FEE2E2"
+            badge_text = "#F87171" if is_dark else "#991B1B"
+            badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {badge_bg};
+                    color: {badge_text};
                     border-radius: 18px;
                     padding: 8px 20px;
-                }
+                }}
             """)
             insight_text = "⚠️ Small setback. Refocus and get back on track this week!"
         else:
             badge.setText("➖ No Change (0%)")
-            badge.setStyleSheet("""
-                QLabel {
-                    background-color: #E5E7EB;
-                    color: #374151;
+            badge_bg = "#333645" if is_dark else "#E5E7EB"
+            badge_text = "#9CA3AF" if is_dark else "#374151"
+            badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {badge_bg};
+                    color: {badge_text};
                     border-radius: 18px;
                     padding: 8px 20px;
-                }
+                }}
             """)
             insight_text = "✓ Consistency maintained. Try to improve by 10% this week!"
 
@@ -1110,7 +1176,7 @@ class AnalyticsContentView(QWidget):
         insight = QLabel(insight_text)
         insight.setFont(QFont("SF Pro Text", 13))
         insight.setStyleSheet(
-            "color: #6B7280; background-color: #FFFFFF; border: none;"
+            f"color: {secondary_color}; background-color: transparent; border: none;"
         )
         insight.setAlignment(Qt.AlignCenter)
         insight.setWordWrap(True)
@@ -1378,12 +1444,15 @@ class AnalyticsContentView(QWidget):
 
         # Best performers
         best_card = QFrame()
-        best_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        container_bg = "#252732" if is_dark else "#FFFFFF"
+        border_color = "#333645" if is_dark else "#F1F5F9"
+        best_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {container_bg};
                 border-radius: 20px;
-                border: 1px solid #F1F5F9;
-            }
+                border: 1px solid {border_color};
+            }}
         """)
 
         shadow = QGraphicsDropShadowEffect()
@@ -1398,15 +1467,17 @@ class AnalyticsContentView(QWidget):
 
         best_title = QLabel("🏆 Best Performers")
         best_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
+        text_primary = "#F3F4F6" if is_dark else "#111827"
         best_title.setStyleSheet(
-            "color: #111827; background: transparent; border: none;"
+            f"color: {text_primary}; background: transparent; border: none;"
         )
         best_layout.addWidget(best_title)
 
         best_subtitle = QLabel("Top 3 habits - Keep up the great work!")
         best_subtitle.setFont(QFont("SF Pro Text", 12))
+        secondary_color = "#9CA3AF" if is_dark else "#6B7280"
         best_subtitle.setStyleSheet(
-            "color: #6B7280; background: transparent; border: none;"
+            f"color: {secondary_color}; background: transparent; border: none;"
         )
         best_layout.addWidget(best_subtitle)
 
@@ -1419,12 +1490,12 @@ class AnalyticsContentView(QWidget):
 
         # Worst performers
         worst_card = QFrame()
-        worst_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        worst_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {container_bg};
                 border-radius: 20px;
-                border: 1px solid #F1F5F9;
-            }
+                border: 1px solid {border_color};
+            }}
         """)
 
         shadow2 = QGraphicsDropShadowEffect()
@@ -1440,14 +1511,14 @@ class AnalyticsContentView(QWidget):
         worst_title = QLabel("⚠️ Needs Attention")
         worst_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
         worst_title.setStyleSheet(
-            "color: #111827; background: transparent; border: none;"
+            f"color: {text_primary}; background: transparent; border: none;"
         )
         worst_layout.addWidget(worst_title)
 
         worst_subtitle = QLabel("Focus on improving these habits")
         worst_subtitle.setFont(QFont("SF Pro Text", 12))
         worst_subtitle.setStyleSheet(
-            "color: #6B7280; background: transparent; border: none;"
+            f"color: {secondary_color}; background: transparent; border: none;"
         )
         worst_layout.addWidget(worst_subtitle)
 
@@ -1472,17 +1543,19 @@ class AnalyticsContentView(QWidget):
         else:
             accent_color = "#EF4444"
 
+        is_dark = get_theme_manager().is_dark_mode()
+        item_bg = "#2C2F3A" if is_dark else "#F9FAFB"
         card.setObjectName("perfCard")
-        card.setStyleSheet("""
-            QFrame#perfCard { 
-                background-color: #F9FAFB;
+        card.setStyleSheet(f"""
+            QFrame#perfCard {{ 
+                background-color: {item_bg};
                 border-radius: 12px;
                 border: none;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 border: none;
                 background: transparent;
-            }
+            }}
         """)
 
         card_layout = QHBoxLayout(card)
@@ -1512,22 +1585,25 @@ class AnalyticsContentView(QWidget):
 
         name_label = QLabel(stat["habit"].name)
         name_label.setFont(QFont("SF Pro Display", 15, QFont.Bold))
-        name_label.setStyleSheet("color: #111827;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        name_label.setStyleSheet(f"color: {text_primary};")
         info_layout.addWidget(name_label)
 
         stats_label = QLabel(
             f"{stat['completions']}/30 days • {stat['streak']} day streak"
         )
         stats_label.setFont(QFont("SF Pro Text", 11))
-        stats_label.setStyleSheet("color: #6B7280;")
+        secondary_color = "#9CA3AF" if is_dark else "#6B7280"
+        stats_label.setStyleSheet(f"color: {secondary_color};")
         info_layout.addWidget(stats_label)
 
         card_layout.addLayout(info_layout, stretch=1)
 
         # Percentage
+        rate_text_color = "#34D399" if (is_best and is_dark) else ("#F87171" if (not is_best and is_dark) else accent_color)
         percentage_label = QLabel(f"{stat['rate']}%")
         percentage_label.setFont(QFont("SF Pro Display", 24, QFont.Bold))
-        percentage_label.setStyleSheet(f"color: {accent_color};")
+        percentage_label.setStyleSheet(f"color: {rate_text_color};")
         card_layout.addWidget(percentage_label)
 
         parent_layout.addWidget(card)
@@ -1544,12 +1620,15 @@ class AnalyticsContentView(QWidget):
 
         # TIME OF DAY CARD
         time_card = QFrame()
-        time_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        container_bg = "#252732" if is_dark else "#FFFFFF"
+        border_color = "#333645" if is_dark else "#F1F5F9"
+        time_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {container_bg};
                 border-radius: 20px;
-                border: 1px solid #F1F5F9;
-            }
+                border: 1px solid {border_color};
+            }}
         """)
 
         shadow = QGraphicsDropShadowEffect()
@@ -1564,8 +1643,9 @@ class AnalyticsContentView(QWidget):
 
         time_title = QLabel("⏰ Time of Day")
         time_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
+        text_primary = "#F3F4F6" if is_dark else "#111827"
         time_title.setStyleSheet(
-            "color: #111827; background: transparent; border: none;"
+            f"color: {text_primary}; background: transparent; border: none;"
         )
         time_layout.addWidget(time_title)
 
@@ -1601,16 +1681,17 @@ class AnalyticsContentView(QWidget):
             period_card = QFrame()
             period_card.setFixedHeight(75)
             period_card.setObjectName("periodCard")
-            period_card.setStyleSheet("""
-                QFrame#periodCard {
-                    background-color: #F9FAFB;
+            item_bg = "#2C2F3A" if is_dark else "#F9FAFB"
+            period_card.setStyleSheet(f"""
+                QFrame#periodCard {{
+                    background-color: {item_bg};
                     border-radius: 12px;
                     border: none;
-                }
-                QLabel {
+                }}
+                QLabel {{
                     border: none;
                     background: transparent;
-                }
+                }}
             """)
 
             period_layout = QHBoxLayout(period_card)
@@ -1638,12 +1719,14 @@ class AnalyticsContentView(QWidget):
 
             name_label = QLabel(period["name"])
             name_label.setFont(QFont("SF Pro Display", 15, QFont.Bold))
-            name_label.setStyleSheet("color: #111827;")
+            text_primary = "#F3F4F6" if is_dark else "#111827"
+            name_label.setStyleSheet(f"color: {text_primary};")
             info_layout.addWidget(name_label)
 
             time_label = QLabel(period["time"])
             time_label.setFont(QFont("SF Pro Text", 11))
-            time_label.setStyleSheet("color: #6B7280;")
+            secondary_color = "#9CA3AF" if is_dark else "#6B7280"
+            time_label.setStyleSheet(f"color: {secondary_color};")
             info_layout.addWidget(time_label)
 
             period_layout.addLayout(info_layout, stretch=1)
@@ -1663,13 +1746,13 @@ class AnalyticsContentView(QWidget):
 
         # Insight
         insight_box = QFrame()
-        insight_box.setStyleSheet("""
-            QFrame {
-                background-color: #EEF2FF;
+        insight_box.setStyleSheet(f"""
+            QFrame {{
+                background-color: {"rgba(139, 92, 241, 0.1)" if is_dark else "#EEF2FF"};
                 border: 1px solid rgba(99, 102, 241, 0.2);
                 border-radius: 12px;
                 padding: 12px;
-            }
+            }}
         """)
 
         insight_layout = QVBoxLayout(insight_box)
@@ -1680,7 +1763,7 @@ class AnalyticsContentView(QWidget):
         )
         insight_label.setFont(QFont("SF Pro Text", 12))
         insight_label.setStyleSheet(
-            "color: #4F46E5; background: transparent; border: none;"
+            f"color: {'#F3F4F6' if is_dark else '#4F46E5'}; background: transparent; border: none;"
         )
         insight_label.setWordWrap(True)
         insight_layout.addWidget(insight_label)
@@ -1692,12 +1775,12 @@ class AnalyticsContentView(QWidget):
 
         # DIFFICULTY CARD
         diff_card = QFrame()
-        diff_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        diff_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {container_bg};
                 border-radius: 20px;
-                border: 1px solid #F1F5F9;
-            }
+                border: 1px solid {border_color};
+            }}
         """)
 
         shadow2 = QGraphicsDropShadowEffect()
@@ -1713,7 +1796,7 @@ class AnalyticsContentView(QWidget):
         diff_title = QLabel("💪 Difficulty Analysis")
         diff_title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
         diff_title.setStyleSheet(
-            "color: #111827; background: transparent; border: none;"
+            f"color: {text_primary}; background: transparent; border: none;"
         )
         diff_layout.addWidget(diff_title)
 
@@ -1765,16 +1848,17 @@ class AnalyticsContentView(QWidget):
             level_card = QFrame()
             level_card.setFixedHeight(75)
             level_card.setObjectName("levelCard")
-            level_card.setStyleSheet("""
-                QFrame#levelCard {
-                    background-color: #F9FAFB;
+            item_bg = "#2C2F3A" if is_dark else "#F9FAFB"
+            level_card.setStyleSheet(f"""
+                QFrame#levelCard {{
+                    background-color: {item_bg};
                     border-radius: 12px;
                     border: none;
-                }
-                QLabel {
+                }}
+                QLabel {{
                     border: none;
                     background: transparent;
-                }
+                }}
             """)
 
             level_layout = QHBoxLayout(level_card)
@@ -1800,12 +1884,14 @@ class AnalyticsContentView(QWidget):
 
             name_label = QLabel(level["name"])
             name_label.setFont(QFont("SF Pro Display", 15, QFont.Bold))
-            name_label.setStyleSheet("color: #111827;")
+            text_primary = "#F3F4F6" if is_dark else "#111827"
+            name_label.setStyleSheet(f"color: {text_primary};")
             info_layout.addWidget(name_label)
 
             desc_label = QLabel(level["desc"])
             desc_label.setFont(QFont("SF Pro Text", 11))
-            desc_label.setStyleSheet("color: #6B7280;")
+            secondary_color = "#9CA3AF" if is_dark else "#6B7280"
+            desc_label.setStyleSheet(f"color: {secondary_color};")
             info_layout.addWidget(desc_label)
 
             level_layout.addLayout(info_layout, stretch=1)
@@ -1820,13 +1906,13 @@ class AnalyticsContentView(QWidget):
 
         # Recommendation
         rec_box = QFrame()
-        rec_box.setStyleSheet("""
-            QFrame {
-                background-color: #FFFBEB;
+        rec_box.setStyleSheet(f"""
+            QFrame {{
+                background-color: {"rgba(251, 191, 36, 0.08)" if is_dark else "#FFFBEB"};
                 border: 1px solid rgba(245, 158, 11, 0.2);
                 border-radius: 12px;
                 padding: 12px;
-            }
+            }}
         """)
 
         rec_layout = QVBoxLayout(rec_box)
@@ -1846,7 +1932,7 @@ class AnalyticsContentView(QWidget):
         rec_label = QLabel(rec_text)
         rec_label.setFont(QFont("SF Pro Text", 12))
         rec_label.setStyleSheet(
-            "color: #92400E; background: transparent; border: none;"
+            f"color: {'#F3F4F6' if is_dark else '#92400E'}; background: transparent; border: none;"
         )
         rec_label.setWordWrap(True)
         rec_layout.addWidget(rec_label)

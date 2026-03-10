@@ -71,8 +71,9 @@ class SimpleCircularProgress(QWidget):
             painter.setPen(Qt.NoPen)
             painter.drawEllipse(rect)
 
-        # Background ring
-        bg_pen = QPen(QColor("#161a22" if is_dark else "#E0E7FF"), 18)
+        # Background ring (Uncompleted track)
+        track_color = "rgba(139, 92, 246, 0.1)" if is_dark else "#E0E7FF"
+        bg_pen = QPen(QColor(track_color), 18)
         bg_pen.setCapStyle(Qt.RoundCap)
         painter.setPen(bg_pen)
         painter.setBrush(Qt.NoBrush)
@@ -83,9 +84,15 @@ class SimpleCircularProgress(QWidget):
             gradient = QLinearGradient(
                 center_x, center_y - radius, center_x, center_y + radius
             )
-            gradient.setColorAt(0, QColor("#667eea"))
-            gradient.setColorAt(0.5, QColor("#764ba2"))
-            gradient.setColorAt(1, QColor("#f093fb"))
+            # Saturated identity: Blue to Magenta
+            if is_dark:
+                gradient.setColorAt(0, QColor("#5069f2")) # Saturated blue
+                gradient.setColorAt(0.5, QColor("#7d44cf")) # Saturated purple
+                gradient.setColorAt(1, QColor("#f682ff")) # Saturated pink/magenta
+            else:
+                gradient.setColorAt(0, QColor("#667eea"))
+                gradient.setColorAt(0.5, QColor("#764ba2"))
+                gradient.setColorAt(1, QColor("#f093fb"))
 
             progress_pen = QPen(gradient, 18)
             progress_pen.setCapStyle(Qt.RoundCap)
@@ -105,7 +112,8 @@ class SimpleCircularProgress(QWidget):
 
         # Percentage Text
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
-        painter.setPen(QColor("#dbdee4" if is_dark else "#111827"))
+        text_color = "#F3F4F6" if is_dark else "#111827"
+        painter.setPen(QColor(text_color))
         painter.setFont(QFont("SF Pro Display", 42, QFont.Bold))
         painter.drawText(self.rect(), Qt.AlignCenter, f"{int(self.percentage)}%")
 
@@ -139,11 +147,11 @@ class HabitCard(QFrame):
     # UI
     def setup_ui(self):
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
-        bg_color = "#161a22" if is_dark else "#FFFFFF"
-        hover_bg = "#1A1F2E" if is_dark else "#F8FAFF"
-        text_primary = "#dbdee4" if is_dark else "#1F2937"
-        text_secondary = "#8B92A0" if is_dark else "#9CA3AF"
-        border_style = "border: 1px solid #dbdee4;" if is_dark else "border: none;"
+        bg_color = "#1A1C23" if is_dark else "#FFFFFF"
+        hover_bg = "#252732" if is_dark else "#F8FAFF"
+        text_primary = "#F3F4F6" if is_dark else "#1F2937"
+        text_secondary = "#9CA3AF" if is_dark else "#9CA3AF"
+        border_style = "border: 1px solid #333645;" if is_dark else "border: none;"
 
         self.setStyleSheet(f"""
             QFrame#habitCard {{
@@ -204,6 +212,7 @@ class HabitCard(QFrame):
             QPushButton:hover {{
                 background-color: {btn_hover_bg};
                 color: {btn_hover_text};
+                border: 1px solid #6366F1;
             }}
         """)
         self.edit_btn.clicked.connect(self.edit_habit)
@@ -270,16 +279,18 @@ class HabitCard(QFrame):
                 color: {btn_text};
                 border-radius: 14px;
                 padding: 6px 16px;
+                border: 1px solid {"#4F46E5" if is_dark else "transparent"};
             }}
             QPushButton:hover {{
                 background-color: {btn_hover};
+                border: 1px solid #6366F1;
             }}
         """)
 
     def apply_completed_style(self):
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
-        bg_color = "#161a22" if is_dark else "#F9FAFB"
-        border_style = "border: 1px solid #dbdee4; border-left: 4px solid #10B981;" if is_dark else "border: none; border-left: 4px solid #10B981;"
+        bg_color = "#1A1C23" if is_dark else "#F9FAFB"
+        border_style = "border: 1px solid #333645; border-left: 4px solid #10B981;" if is_dark else "border: none; border-left: 4px solid #10B981;"
         
         self.setStyleSheet(f"""
             QFrame#habitCard {{
@@ -301,6 +312,7 @@ class HabitCard(QFrame):
                 color: {btn_text};
                 border-radius: 14px;
                 padding: 6px 16px;
+                border: 1px solid {"#065F46" if is_dark else "transparent"};
             }}
         """)
 
@@ -462,21 +474,24 @@ class WeekDayCard(QWidget):
 
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
         if percentage > 0:
-            background = """
+            # Saturated identity: Blue to Purple to Pink (from Analytics StatCard logic)
+            s_start = "#5069f2" if is_dark else "#667eea"
+            s_mid = "#7d44cf" if is_dark else "#764ba2"
+            s_end = "#f682ff" if is_dark else "#f093fb"
+            background = f"""
                 qlineargradient(x1:0,y1:0,x2:0,y2:1,
-                stop:0 #667eea,
-                stop:0.5 #764ba2,
-                stop:1 #f093fb)
+                stop:0 {s_start},
+                stop:0.5 {s_mid},
+                stop:1 {s_end})
             """
             text_color = "#FFFFFF"
-            border = "border: 2px solid #667eea;" if self.is_today else "border: none;"
+            # Highlight today with a ring or glow, but remove thick border if requested
+            border = "border: none;"
         else:
-            background = "#161a22" if is_dark else "#F3F4F6"
-            text_color = "#dbdee4" if is_dark else "#9CA3AF"
-            if is_dark:
-                border = "border: 2px solid #667eea;" if self.is_today else "border: 1px solid #dbdee4;"
-            else:
-                border = "border: 2px solid #667eea;" if self.is_today else "border: none;"
+            background = "#252732" if is_dark else "#F3F4F6"
+            text_color = "#9CA3AF" if is_dark else "#9CA3AF"
+            primary_text = "#F3F4F6" if is_dark else "#111827"
+            border = f"border: 1px solid {primary_text};"
 
         card.setStyleSheet(f"""
             QFrame#weekDayCard {{
@@ -494,7 +509,7 @@ class WeekDayCard(QWidget):
         # Percentage
         percent_label = QLabel(f"{percentage}%")
         percent_label.setFont(QFont("SF Pro Display", 26, QFont.Bold))
-        percent_label.setStyleSheet(f"color: {text_color}; background: transparent;")
+        percent_label.setStyleSheet(f"color: {text_color}; background: transparent; border: none;")
         percent_label.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(percent_label)
 
@@ -507,6 +522,7 @@ class WeekDayCard(QWidget):
                 QFrame {
                     background: rgba(255,255,255,0.35);
                     border-radius: 3px;
+                    border: none;
                 }
             """)
         else:
@@ -515,6 +531,7 @@ class WeekDayCard(QWidget):
                 QFrame {{
                     background: {progress_bg_color};
                     border-radius: 3px;
+                    border: none;
                 }}
             """)
 
@@ -525,6 +542,7 @@ class WeekDayCard(QWidget):
             QFrame {
                 background: white;
                 border-radius: 3px;
+                border: none;
             }
         """)
 
@@ -535,14 +553,14 @@ class WeekDayCard(QWidget):
         # ---------- DAY NAME BELOW ----------
         day_label = QLabel(day_name)
         day_label.setFont(QFont("SF Pro Text", 12, QFont.Bold))
-        day_label.setStyleSheet(f"color: {'#dbdee4' if is_dark else '#6B7280'};")
+        day_label.setStyleSheet(f"color: {'#9CA3AF' if is_dark else '#6B7280'}; border: none; background: transparent;")
         day_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(day_label)
 
         # Date Number
         date_label = QLabel(str(day_number))
         date_label.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        date_label.setStyleSheet(f"color: {text_color}; background: transparent;")
+        date_label.setStyleSheet(f"color: {text_color}; background: transparent; border: none;")
         date_label.setAlignment(Qt.AlignCenter)
         card_layout.addWidget(date_label)
 
@@ -566,7 +584,7 @@ class HabitEmptyState(QFrame):
         self.setMinimumHeight(280)
         self.setCursor(Qt.ArrowCursor)
         
-        border_color = "#374151" if is_dark else "#E5E7EB"
+        border_color = "#333645" if is_dark else "#E5E7EB"
         self.setStyleSheet(f"""
             QFrame {{
                 background: transparent;
@@ -597,14 +615,14 @@ class HabitEmptyState(QFrame):
         # Title
         title = QLabel("No habits for today")
         title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        text_primary = "#dbdee4" if is_dark else "#111827"
+        text_primary = "#F3F4F6" if is_dark else "#111827"
         title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
         layout.addWidget(title, alignment=Qt.AlignCenter)
 
         # Subtitle
         desc = QLabel("Ready to start a new streak? Create your first habit!")
         desc.setFont(QFont("SF Pro Text", 14))
-        text_secondary = "#8B92A0" if is_dark else "#6B7280"
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
         desc.setStyleSheet(f"color: {text_secondary}; border: none; background: transparent;")
         desc.setAlignment(Qt.AlignCenter)
         layout.addWidget(desc, alignment=Qt.AlignCenter)
@@ -615,19 +633,25 @@ class HabitEmptyState(QFrame):
         self.create_btn.setFont(QFont("SF Pro Text", 13, QFont.Bold))
         self.create_btn.setCursor(Qt.PointingHandCursor)
         self.create_btn.setGraphicsEffect(None)
-        self.create_btn.setStyleSheet("""
-            QPushButton {
+        is_dark = self.theme_manager.is_dark_mode()
+        s_start = "#5069f2" if is_dark else "#667eea"
+        s_end = "#7d44cf" if is_dark else "#764ba2"
+        h_start = "#4F46E5" if is_dark else "#5568d3"
+        h_end = "#7C3AED" if is_dark else "#6a4191"
+
+        self.create_btn.setStyleSheet(f"""
+            QPushButton {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
+                    stop:0 {s_start}, stop:1 {s_end});
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
                 margin-top: 10px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #5568d3, stop:1 #6a4191);
-            }
+                    stop:0 {h_start}, stop:1 {h_end});
+            }}
         """)
         layout.addWidget(self.create_btn, alignment=Qt.AlignCenter)
 
@@ -649,6 +673,7 @@ class ModernDashboard(QWidget):
 
     def setup_ui(self):
         """Setup dashboard UI"""
+        is_dark = self.theme_manager.is_dark_mode()
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
@@ -694,7 +719,8 @@ class ModernDashboard(QWidget):
 
         self.greeting_label = QLabel(f"{greeting_text}, {first_name}!")
         self.greeting_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        self.greeting_label.setStyleSheet("color: #111827; background: transparent;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        self.greeting_label.setStyleSheet(f"color: {text_primary}; background: transparent;")
         greeting_layout.addWidget(self.greeting_label)
 
         today = datetime.now()
@@ -702,7 +728,8 @@ class ModernDashboard(QWidget):
 
         date_label = QLabel(date_str)
         date_label.setFont(QFont("SF Pro Text", 14))
-        date_label.setStyleSheet("color: #6B7280; background: transparent;")
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        date_label.setStyleSheet(f"color: {text_secondary}; background: transparent;")
         date_label.setWordWrap(True)
         greeting_layout.addWidget(date_label)
 
@@ -717,22 +744,27 @@ class ModernDashboard(QWidget):
         navbar_layout.addWidget(self.theme_btn)
 
         # Space between theme switcher and notification bell
-        navbar_layout.addSpacing(16)
+        navbar_layout.addSpacing(20)
 
         # Notification
+        is_dark = self.theme_manager.is_dark_mode()
         notif_btn = QPushButton("🔔")
         notif_btn.setFont(QFont("SF Pro Display", 20))
         notif_btn.setFixedSize(50, 50)
         notif_btn.setCursor(Qt.PointingHandCursor)
-        notif_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #F3F4F6;
+        
+        bg_color = "#252732" if is_dark else "#F3F4F6"
+        hover_color = "#333645" if is_dark else "#E5E7EB"
+        
+        notif_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {bg_color};
                 border: none;
                 border-radius: 25px;
-            }
-            QPushButton:hover {
-                background-color: #E5E7EB;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {hover_color};
+            }}
         """)
         navbar_layout.addWidget(notif_btn)
         self.notif_btn = notif_btn
@@ -757,20 +789,33 @@ class ModernDashboard(QWidget):
         new_btn.setFont(QFont("SF Pro Text", 15, QFont.Bold))
         new_btn.setFixedHeight(50)
         new_btn.setCursor(Qt.PointingHandCursor)
-        new_btn.setStyleSheet("""
-            QPushButton {
+        
+        is_dark = self.theme_manager.is_dark_mode()
+        s_start = "#5069f2" if is_dark else "#667eea"
+        s_mid = "#7d44cf" if is_dark else "#764ba2"
+        s_end = "#f682ff" if is_dark else "#f093fb"
+        
+        h_start = "#4F46E5" if is_dark else "#5568d3"
+        h_mid = "#7C3AED" if is_dark else "#6a4191"
+        h_end = "#9333EA" if is_dark else "#e07af0"
+
+        new_btn.setStyleSheet(f"""
+            QPushButton {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+                    stop:0 {s_start}, stop:0.5 {s_mid}, stop:1 {s_end});
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
                 padding: 0px 26px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5568d3, stop:0.5 #6a4191, stop:1 #e07af0);
-            }
+                    stop:0 {h_start}, stop:0.5 {h_mid}, stop:1 {h_end});
+            }}
         """)
+        # Space between notification and new habit button
+        navbar_layout.addSpacing(20)
+        
         new_btn.clicked.connect(self.show_add_habit)
         navbar_layout.addWidget(new_btn)
 
@@ -785,11 +830,12 @@ class ModernDashboard(QWidget):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("""
-            QScrollArea {
+        is_dark = self.theme_manager.is_dark_mode()
+        scroll.setStyleSheet(f"""
+            QScrollArea {{
                 border: none;
-                background-color: #F9FAFB;
-            }
+                background-color: {"#1A1C23" if is_dark else "#F9FAFB"};
+            }}
         """)
 
         content = QWidget()
@@ -805,11 +851,13 @@ class ModernDashboard(QWidget):
         daily_card = QFrame()
         daily_card.setFixedWidth(380)
         daily_card.setFixedHeight(448)
-        daily_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        daily_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {"#252732" if is_dark else "#FFFFFF"};
+                border: 1px solid {"#333645" if is_dark else "transparent"};
                 border-radius: 20px;
-            }
+            }}
         """)
         self.apply_card_shadow(daily_card)
 
@@ -819,7 +867,8 @@ class ModernDashboard(QWidget):
 
         daily_title = QLabel("Daily Completion")
         daily_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        daily_title.setStyleSheet("color: #111827;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        daily_title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
         daily_layout.addWidget(daily_title)
 
         self.circular_progress = SimpleCircularProgress(0)
@@ -827,7 +876,8 @@ class ModernDashboard(QWidget):
 
         self.progress_text = QLabel("Loading...")
         self.progress_text.setFont(QFont("SF Pro Text", 15))
-        self.progress_text.setStyleSheet("color: #6B7280;")
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        self.progress_text.setStyleSheet(f"color: {text_secondary}; border: none; background: transparent;")
         self.progress_text.setAlignment(Qt.AlignCenter)
         self.progress_text.setWordWrap(True)
         daily_layout.addWidget(self.progress_text)
@@ -841,11 +891,13 @@ class ModernDashboard(QWidget):
         habits_card = QFrame()
         habits_card.setObjectName("todayCard")
         habits_card.setFixedHeight(448)
-        habits_card.setStyleSheet("""
-            QFrame#todayCard {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        habits_card.setStyleSheet(f"""
+            QFrame#todayCard {{
+                background-color: {"#252732" if is_dark else "#FFFFFF"};
+                border: 1px solid {"#333645" if is_dark else "transparent"};
                 border-radius: 20px;
-            }
+            }}
         """)
         self.apply_card_shadow(habits_card)
 
@@ -859,7 +911,8 @@ class ModernDashboard(QWidget):
 
         habits_title = QLabel("Today's Habits")
         habits_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        habits_title.setStyleSheet("background-color: transparent; color: #111827;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        habits_title.setStyleSheet(f"background-color: transparent; color: {text_primary};")
         habits_header.addWidget(habits_title)
         
         self.habits_card = habits_card
@@ -910,11 +963,11 @@ class ModernDashboard(QWidget):
         # Wrap scroll inside inner recessed container
         habit_list_container = QFrame()
         self.habit_list_container = habit_list_container
-        habit_list_container.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        habit_list_container.setStyleSheet(f"""
+            QFrame {{
+                background-color: {"#2C2F3A" if is_dark else "#FFFFFF"};
                 border-radius: 16px;
-            }
+            }}
         """)
 
         # APPLY UPWARD SHADOW
@@ -949,11 +1002,13 @@ class ModernDashboard(QWidget):
 
         # Weekly Activity
         weekly_card = QFrame()
-        weekly_card.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
+        is_dark = self.theme_manager.is_dark_mode()
+        weekly_card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {"#252732" if is_dark else "#FFFFFF"};
+                border: 1px solid {"#333645" if is_dark else "transparent"};
                 border-radius: 20px;
-            }
+            }}
         """)
         weekly_card.setFixedHeight(348)
 
@@ -965,14 +1020,16 @@ class ModernDashboard(QWidget):
 
         weekly_title = QLabel("Weekly Activity")
         weekly_title.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        weekly_title.setStyleSheet("color: #111827;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        weekly_title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
         weekly_header.addWidget(weekly_title)
 
         weekly_header.addStretch()
 
         weekly_subtitle = QLabel("Last 7 Days")
         weekly_subtitle.setFont(QFont("SF Pro Text", 13))
-        weekly_subtitle.setStyleSheet("color: #6B7280;")
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        weekly_subtitle.setStyleSheet(f"color: {text_secondary}; border: none; background: transparent;")
         weekly_header.addWidget(weekly_subtitle)
         
         self.weekly_card = weekly_card
@@ -989,21 +1046,27 @@ class ModernDashboard(QWidget):
 
         bottom_row.addWidget(weekly_card, stretch=2)
 
-        # Premium Streak Card
         milestone_card = QFrame()
         milestone_card.setFixedHeight(348)
-        milestone_card.setStyleSheet("""
-            QFrame#streakCard {
+        is_dark = self.theme_manager.is_dark_mode()
+        # Saturated brand colors for dark mode consistent with analytics
+        s_start = "#5069f2" if is_dark else "#667eea"
+        s_mid = "#7d44cf" if is_dark else "#764ba2"
+        s_end = "#f682ff" if is_dark else "#f093fb"
+        
+        milestone_card.setStyleSheet(f"""
+            QFrame#streakCard {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
-                border: 1px solid rgba(240, 147, 251, 0.35);
+                    stop:0 {s_start}, stop:0.5 {s_mid}, stop:1 {s_end});
+                border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 24px;
-            }
+            }}
         """)
         milestone_card.setObjectName("streakCard")
         milestone_card.setMinimumWidth(
             380
         )  # Ensure enough space for large numbers (100+)
+        self.milestone_card = milestone_card
 
         streak_card_shadow = QGraphicsDropShadowEffect()
         streak_card_shadow.setBlurRadius(40)
@@ -1141,44 +1204,79 @@ class ModernDashboard(QWidget):
         colors = self.theme_manager.get_theme()
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
         
-        self.setStyleSheet(f"background-color: {colors.BG_PRIMARY};")
+        bg_primary = "#1A1C23" if is_dark else colors.BG_PRIMARY
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        
+        self.setStyleSheet(f"background-color: {bg_primary};")
         if hasattr(self, 'navbar'):
             self.navbar.setStyleSheet(f"""
                 QFrame {{
-                    background-color: {colors.BG_PRIMARY};
+                    background-color: {bg_primary};
                     border: none;
                 }}
             """)
         
         if hasattr(self, 'greeting_label'):
-            self.greeting_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent;")
+            self.greeting_label.setStyleSheet(f"color: {text_primary}; background: transparent;")
+        
+        if hasattr(self, 'date_label'):
+            self.date_label.setStyleSheet(f"color: {text_secondary}; background: transparent;")
 
         # Apply specific card dark styles
-        card_bg = "#20282c" if is_dark else "#FFFFFF"
-        text_primary = "#dbdee4" if is_dark else "#111827"
-        text_secondary = "#dbdee4" if is_dark else "#6B7280"
+        card_bg = "#252732" if is_dark else "#FFFFFF"
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        border_color = "#333645" if is_dark else "transparent"
+        border_style = f"border: 1px solid {border_color};" if is_dark else "border: none;"
+        inner_bg = "#2C2F3A" if is_dark else "#FFFFFF"
         
+        if hasattr(self, 'notif_btn'):
+            bg_color = "#252732" if is_dark else "#F3F4F6"
+            hover_color = "#333645" if is_dark else "#E5E7EB"
+            self.notif_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {bg_color};
+                    border: none;
+                    border-radius: 25px;
+                }}
+                QPushButton:hover {{
+                    background-color: {hover_color};
+                }}
+            """)
+        
+        if hasattr(self, 'notif_badge'):
+            badge_border = "#252732" if is_dark else "#FFFFFF"
+            self.notif_badge.setStyleSheet(f"""
+                background-color: #EF4444;
+                color: white;
+                border-radius: 9px;
+                border: 2px solid {badge_border};
+            """)
+        
+        # Apply cards and sections...
         if hasattr(self, 'daily_card'):
             self.daily_card.setStyleSheet(f"""
                 QFrame {{
                     background-color: {card_bg};
+                    {border_style}
                     border-radius: 20px;
                 }}
             """)
-            self.daily_title.setStyleSheet(f"color: {text_primary};")
-            self.progress_text.setStyleSheet(f"color: {text_secondary};")
+            self.daily_title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
+            self.progress_text.setStyleSheet(f"color: {text_secondary}; border: none; background: transparent;")
             
         if hasattr(self, 'habits_card'):
             self.habits_card.setStyleSheet(f"""
                 QFrame#todayCard {{
                     background-color: {card_bg};
+                    {border_style}
                     border-radius: 20px;
                 }}
             """)
             self.habits_title.setStyleSheet(f"background-color: transparent; color: {text_primary};")
             
         if hasattr(self, 'habit_list_container'):
-            inner_bg = "#20282c" if is_dark else "#FFFFFF"
             self.habit_list_container.setStyleSheet(f"""
                 QFrame {{
                     background-color: {inner_bg};
@@ -1190,11 +1288,25 @@ class ModernDashboard(QWidget):
             self.weekly_card.setStyleSheet(f"""
                 QFrame {{
                     background-color: {card_bg};
+                    {border_style}
                     border-radius: 20px;
                 }}
             """)
-            self.weekly_title.setStyleSheet(f"color: {text_primary};")
-            self.weekly_subtitle.setStyleSheet(f"color: {text_secondary};")
+            self.weekly_title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
+            self.weekly_subtitle.setStyleSheet(f"color: {text_secondary}; border: none; background: transparent;")
+
+        if hasattr(self, 'milestone_card'):
+            s_start = "#5069f2" if is_dark else "#667eea"
+            s_mid = "#7d44cf" if is_dark else "#764ba2"
+            s_end = "#f682ff" if is_dark else "#f093fb"
+            self.milestone_card.setStyleSheet(f"""
+                QFrame#streakCard {{
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                        stop:0 {s_start}, stop:0.5 {s_mid}, stop:1 {s_end});
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border-radius: 24px;
+                }}
+            """)
 
         # Repaint circular progress so it updates its colors
         if hasattr(self, 'circular_progress'):
@@ -1441,30 +1553,38 @@ class NotificationItem(QFrame):
 
     def setIsRead(self, is_read):
         self.is_read = is_read
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        
         if is_read:
-            self.setStyleSheet("""
-                QFrame {
-                    background-color: #F9FAFB;
-                    border: 1px solid #F3F4F6;
+            bg = "#1A1C23" if is_dark else "#F9FAFB"
+            border = "#333645" if is_dark else "#F3F4F6"
+            color = "#9CA3AF" if is_dark else "#6B7280"
+            self.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {bg};
+                    border: 1px solid {border};
                     border-radius: 12px;
-                }
-                QLabel { 
+                }}
+                QLabel {{ 
                     border: none; 
                     background: transparent;
-                    color: #6B7280;
-                }
+                    color: {color};
+                }}
             """)
         else:
-            self.setStyleSheet("""
-                QFrame {
-                    background-color: #F0F7FF;
-                    border: 1px solid #DBEAFE;
+            bg = "#252732" if is_dark else "#F0F7FF"
+            border = "#6366F1" if is_dark else "#DBEAFE"
+            self.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {bg};
+                    border: 1px solid {border};
                     border-radius: 12px;
-                }
-                QLabel { 
+                }}
+                QLabel {{ 
                     border: none; 
                     background: transparent;
-                }
+                }}
             """)
 
     def setup_ui(self, title, message, time_str):
@@ -1493,9 +1613,14 @@ class NotificationItem(QFrame):
         icon_label.setFixedWidth(24)
         header_row.addWidget(icon_label)
 
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        text_secondary = "#9CA3AF" if is_dark else "#4B5563"
+
         title_label = QLabel(title)
         title_label.setFont(QFont("SF Pro Text", 13, QFont.Bold))
-        title_label.setStyleSheet("color: #111827; border: none;")
+        title_label.setStyleSheet(f"color: {text_primary}; border: none;")
         header_row.addWidget(title_label, 1)
 
         time_label = QLabel(time_str)
@@ -1507,7 +1632,7 @@ class NotificationItem(QFrame):
 
         msg_label = QLabel(message)
         msg_label.setFont(QFont("SF Pro Text", 12))
-        msg_label.setStyleSheet("color: #4B5563; border: none;")
+        msg_label.setStyleSheet(f"color: {text_secondary}; border: none;")
         msg_label.setWordWrap(True)
         content_container.addWidget(msg_label)
 
@@ -1581,12 +1706,16 @@ class NotificationPanel(QFrame):
 
     def setup_ui(self):
         self.setObjectName("notificationPanel")
-        self.setStyleSheet("""
-            QFrame#notificationPanel {
-                background-color: #FFFFFF;
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        bg = "#1A1C23" if is_dark else "#FFFFFF"
+        border = "#333645" if is_dark else "#E5E7EB"
+        self.setStyleSheet(f"""
+            QFrame#notificationPanel {{
+                background-color: {bg};
                 border-radius: 20px;
-                border: 1px solid #E5E7EB;
-            }
+                border: 1px solid {border};
+            }}
         """)
 
         # Shadow
@@ -1603,20 +1732,25 @@ class NotificationPanel(QFrame):
         # Header
         header = QFrame()
         header.setFixedHeight(64)
-        header.setStyleSheet("""
-            QFrame {
-                background-color: #F9FAFB;
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        header_bg = "#252732" if is_dark else "#F9FAFB"
+        header_border = "#333645" if is_dark else "#F3F4F6"
+        header.setStyleSheet(f"""
+            QFrame {{
+                background-color: {header_bg};
                 border-top-left-radius: 20px;
                 border-top-right-radius: 20px;
-                border-bottom: 1px solid #F3F4F6;
-            }
+                border-bottom: 1px solid {header_border};
+            }}
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(24, 0, 24, 0)
 
         title = QLabel("Notifications")
         title.setFont(QFont("SF Pro Display", 18, QFont.Bold))
-        title.setStyleSheet("color: #111827; border: none; background: transparent;")
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        title.setStyleSheet(f"color: {text_primary}; border: none; background: transparent;")
         header_layout.addWidget(title)
 
         header_layout.addStretch()

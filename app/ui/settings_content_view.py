@@ -37,20 +37,26 @@ class SettingCard(QFrame):
         """Setup setting card UI"""
         self.setMinimumHeight(100)
         self.setObjectName("SettingCard")
-        self.setStyleSheet("""
-            QFrame#SettingCard {
-                background-color: #FFFFFF;
-                border: 1px solid rgba(0, 0, 0, 0.05);
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        bg_card = "#252732" if is_dark else "#FFFFFF"
+        border_card = "1px solid #333645" if is_dark else "1px solid rgba(0, 0, 0, 0.05)"
+        bg_hover = "#2C2F3A" if is_dark else "#FDFDFF"
+        
+        self.setStyleSheet(f"""
+            QFrame#SettingCard {{
+                background-color: {bg_card};
+                border: {border_card};
                 border-radius: 20px;
-            }
-            QFrame#SettingCard:hover {
-                background-color: #FDFDFF;
+            }}
+            QFrame#SettingCard:hover {{
+                background-color: {bg_hover};
                 border: 1px solid rgba(102, 126, 234, 0.2);
-            }
-            QLabel {
+            }}
+            QLabel {{
                 border: none;
                 background: transparent;
-            }
+            }}
         """)
 
         # Premium Shadow
@@ -76,14 +82,19 @@ class SettingCard(QFrame):
         text_layout = QVBoxLayout()
         text_layout.setSpacing(6)
 
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        title_color = "#F3F4F6" if is_dark else "#111827"
+        desc_color = "#9CA3AF" if is_dark else "#6B7280"
+
         title_label = QLabel(title)
         title_label.setFont(QFont("SF Pro Display", 17, QFont.Bold))
-        title_label.setStyleSheet("color: #111827; background: transparent;")
+        title_label.setStyleSheet(f"color: {title_color}; background: transparent;")
         text_layout.addWidget(title_label)
 
         desc_label = QLabel(description)
         desc_label.setFont(QFont("SF Pro Text", 13))
-        desc_label.setStyleSheet("color: #6B7280; background: transparent;")
+        desc_label.setStyleSheet(f"color: {desc_color}; background: transparent;")
         desc_label.setWordWrap(True)
         text_layout.addWidget(desc_label)
 
@@ -146,19 +157,27 @@ class ToggleSwitch(QCheckBox):
         p.setRenderHint(QPainter.Antialiasing)
 
         # Track
+        from app.themes import get_theme_manager
+        is_dark = get_theme_manager().is_dark_mode()
+        
         if self.isChecked():
+            # Saturated purple for dark mode
+            primary = "#5C6BC0" if is_dark else "#667eea"
+            secondary = "#7986CB" if is_dark else "#764ba2"
             grad = QLinearGradient(0, 0, self.width(), 0)
-            grad.setColorAt(0, QColor("#667eea"))
-            grad.setColorAt(1, QColor("#764ba2"))
+            grad.setColorAt(0, QColor(primary))
+            grad.setColorAt(1, QColor(secondary))
             p.setBrush(grad)
         else:
-            p.setBrush(QColor("#E5E7EB"))
+            track_color = "#333645" if is_dark else "#E5E7EB"
+            p.setBrush(QColor(track_color))
 
         p.setPen(Qt.NoPen)
         p.drawRoundedRect(0, 0, self.width(), self.height(), 16, 16)
 
         # Thumb
-        p.setBrush(QColor("white"))
+        thumb_color = "#F3F4F6" if is_dark else "white"
+        p.setBrush(QColor(thumb_color))
         # Subtle thumb shadow
         p.drawEllipse(self._thumb_pos, 4, 24, 24)
 
@@ -170,29 +189,33 @@ class SettingsContentView(QWidget):
         super().__init__(parent)
         self.main_window = parent
         self.settings_service = get_settings_service()
+        from app.themes import get_theme_manager
+        self.theme_manager = get_theme_manager()
         self.setup_ui()
         self.load_settings()
 
     def setup_ui(self):
         """Setup settings UI"""
-        self.setStyleSheet("background-color: #F9FAFB;")
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_primary = "#1A1C23" if is_dark else "#F9FAFB"
+        self.setStyleSheet(f"background-color: {bg_primary};")
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # Header
-        header = QFrame()
-        header.setMinimumHeight(120)
-        header.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #FFFFFF, stop:1 #F9FAFB);
+        header_bg = "#1A1C23" if is_dark else "#FFFFFF"
+        self.header = QFrame()
+        self.header.setMinimumHeight(120)
+        self.header.setStyleSheet(f"""
+            QFrame {{
+                background: {header_bg};
                 border: none;
-            }
+            }}
         """)
 
-        header_layout = QHBoxLayout(header)
+        header_layout = QHBoxLayout(self.header)
         header_layout.setContentsMargins(40, 24, 40, 24)
 
         # Left: Title
@@ -207,20 +230,22 @@ class SettingsContentView(QWidget):
         title_text_layout = QVBoxLayout()
         title_text_layout.setSpacing(2)
 
-        title = QLabel("Settings")
-        title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
-        title.setStyleSheet(
-            "color: #111827; background: transparent; padding-bottom: 4px;"
+        self.title_label = QLabel("Settings")
+        self.title_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        self.title_label.setStyleSheet(
+            f"color: {text_primary}; background: transparent; padding-bottom: 4px;"
         )
-        title.setWordWrap(True)
-        title_text_layout.addWidget(title)
+        self.title_label.setWordWrap(True)
+        title_text_layout.addWidget(self.title_label)
 
-        subtitle = QLabel("Customize your habit tracking experience")
-        subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet(
-            "color: #6B7280; background: transparent; padding-bottom: 2px;"
+        self.subtitle_label = QLabel("Customize your habit tracking experience")
+        self.subtitle_label.setFont(QFont("SF Pro Text", 14))
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        self.subtitle_label.setStyleSheet(
+            f"color: {text_secondary}; background: transparent; padding-bottom: 2px;"
         )
-        title_text_layout.addWidget(subtitle)
+        title_text_layout.addWidget(self.subtitle_label)
 
         title_section.addLayout(title_text_layout)
 
@@ -232,54 +257,63 @@ class SettingsContentView(QWidget):
         save_btn.setFont(QFont("SF Pro Text", 15, QFont.Bold))
         save_btn.setFixedHeight(50)
         save_btn.setCursor(Qt.PointingHandCursor)
-        save_btn.setStyleSheet("""
-            QPushButton {
+        # Saturated gradient for dark mode (+10%)
+        # Original: #667eea, #764ba2, #f093fb
+        # Saturated: #5069f2, #7d44cf, #f682ff
+        grad_start = "#5069f2" if is_dark else "#667eea"
+        grad_mid = "#7d44cf" if is_dark else "#764ba2"
+        grad_end = "#f682ff" if is_dark else "#f093fb"
+        
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
+                    stop:0 {grad_start}, stop:0.5 {grad_mid}, stop:1 {grad_end});
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
                 padding: 0px 32px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #5568d3, stop:0.5 #6a4191, stop:1 #e07af0);
-            }
+            }}
         """)
         save_btn.clicked.connect(self.save_settings)
         header_layout.addWidget(save_btn)
 
-        layout.addWidget(header)
+        layout.addWidget(self.header)
 
         # Content scroll
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll.setStyleSheet("""
-            QScrollArea {
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.NoFrame)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.scroll.setStyleSheet(f"""
+            QScrollArea {{
                 border: none;
                 background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background: #F3F4F6;
+            }}
+            QScrollBar:vertical {{
+                background: {"#1A1C23" if is_dark else "#F3F4F6"};
                 width: 10px;
                 border-radius: 5px;
-            }
-            QScrollBar::handle:vertical {
+            }}
+            QScrollBar::handle:vertical {{
                 background: #6366F1;
                 border-radius: 5px;
-            }
+            }}
         """)
 
-        content = QWidget()
-        content.setStyleSheet("background-color: #F9FAFB;")
-        self.content_layout = QVBoxLayout(content)
+        self.content = QWidget()
+        content_bg = "#1A1C23" if is_dark else "#F9FAFB"
+        self.content.setStyleSheet(f"background-color: {content_bg};")
+        self.content_layout = QVBoxLayout(self.content)
         self.content_layout.setContentsMargins(40, 28, 40, 28)
         self.content_layout.setSpacing(32)
-
-
+ 
+        self.scroll.setWidget(self.content)
+        layout.addWidget(self.scroll)
 
         # SECTION: Notifications
         self.content_layout.addSpacing(12)
@@ -305,24 +339,30 @@ class SettingsContentView(QWidget):
         self.notification_time.setAlignment(Qt.AlignCenter)
         self.notification_time.setCursor(Qt.PointingHandCursor)
         self.notification_time.setButtonSymbols(QTimeEdit.NoButtons)
-        self.notification_time.setStyleSheet("""
-            QTimeEdit {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
-                color: #FFFFFF;
+        
+        # Saturated gradient for dark mode
+        time_grad_start = "#5069f2" if is_dark else "#667eea"
+        time_grad_end = "#7d44cf" if is_dark else "#764ba2"
+        
+        # Dark, semi-transparent purple field for dark mode
+        time_bg = "rgba(139, 92, 246, 0.1)" if is_dark else f"qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {time_grad_start}, stop:1 {time_grad_end})"
+        time_text = "#D1D5DB" if is_dark else "#FFFFFF"
+        
+        self.notification_time.setStyleSheet(f"""
+            QTimeEdit {{
+                background: {time_bg};
+                color: {time_text};
                 border: none;
                 border-radius: 14px;
                 padding: 8px 24px;
                 letter-spacing: 1px;
-            }
-            QTimeEdit:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #5568d3, stop:1 #6a4191);
-            }
-            QTimeEdit:focus {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #5568d3, stop:1 #6a4191);
-            }
+            }}
+            QTimeEdit:hover {{
+                background: {"rgba(139, 92, 246, 0.2)" if is_dark else "#5568d3"};
+            }}
+            QTimeEdit:focus {{
+                background: {"rgba(139, 92, 246, 0.2)" if is_dark else "#5568d3"};
+            }}
         """)
 
         time_card = SettingCard(
@@ -352,35 +392,41 @@ class SettingsContentView(QWidget):
         self.content_layout.addSpacing(12)
         self.add_section_header("💾", "Data Management", "Backup and restore your data")
 
-        # Consistent style for card buttons
-        primary_btn_style = """
-            QPushButton {
+        # Saturated gradient for dark mode
+        primary_grad_start = "#5069f2" if is_dark else "#667eea"
+        primary_grad_end = "#7d44cf" if is_dark else "#764ba2"
+        
+        primary_btn_style = f"""
+            QPushButton {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:1 #764ba2);
+                    stop:0 {primary_grad_start}, stop:1 {primary_grad_end});
                 color: #FFFFFF;
                 border: none;
                 border-radius: 12px;
                 padding: 0px 16px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #5568d3, stop:1 #6a4191);
-            }
+            }}
         """
-
-        danger_btn_style = """
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #EF4444, stop:1 #DC2626);
-                color: #FFFFFF;
+        
+        # Danger zone buttons
+        danger_bg = "#991B1B" if is_dark else "#EF4444"
+        danger_text = "#F87171" if is_dark else "#FFFFFF"
+        danger_hover_bg = "#B91C1C" if is_dark else "#DC2626"
+        
+        danger_btn_style = f"""
+            QPushButton {{
+                background: {danger_bg};
+                color: {danger_text};
                 border: none;
                 border-radius: 12px;
                 padding: 0px 16px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #DC2626, stop:1 #B91C1C);
-            }
+            }}
+            QPushButton:hover {{
+                background: {danger_hover_bg};
+            }}
         """
 
         # Export data
@@ -462,16 +508,19 @@ class SettingsContentView(QWidget):
         # Info footer
         info_frame = QFrame()
         info_frame.setObjectName("InfoFrame")
-        info_frame.setStyleSheet("""
-            QFrame#InfoFrame {
-                background-color: rgba(99, 102, 241, 0.05);
-                border-left: 4px solid #6366F1;
+        is_dark = self.theme_manager.is_dark_mode()
+        info_bg = "rgba(139, 92, 246, 0.1)" if is_dark else "rgba(99, 102, 241, 0.05)"
+        info_border = "#6366F1"
+        info_frame.setStyleSheet(f"""
+            QFrame#InfoFrame {{
+                background-color: {info_bg};
+                border-left: 4px solid {info_border};
                 border-radius: 12px;
-            }
-            QLabel {
+            }}
+            QLabel {{
                 border: none;
                 background: transparent;
-            }
+            }}
         """)
 
         info_layout = QHBoxLayout(info_frame)
@@ -485,13 +534,12 @@ class SettingsContentView(QWidget):
 
         info_text = QLabel("Changes will take effect after clicking 'Save Changes'")
         info_text.setFont(QFont("SF Pro Text", 13, QFont.Medium))
-        info_text.setStyleSheet("color: #4F46E5; background: transparent;")
+        text_color = "#F3F4F6" if is_dark else "#4F46E5"
+        info_text.setStyleSheet(f"color: {text_color}; background: transparent;")
         info_layout.addWidget(info_text, stretch=1)
 
         self.content_layout.addWidget(info_frame)
 
-        scroll.setWidget(content)
-        layout.addWidget(scroll)
 
     def add_section_header(self, icon, title, subtitle, color="#111827"):
         """Add a section header"""
@@ -510,14 +558,19 @@ class SettingsContentView(QWidget):
         text_layout = QVBoxLayout()
         text_layout.setSpacing(2)
 
+        is_dark = self.theme_manager.is_dark_mode()
+        
         title_label = QLabel(title)
         title_label.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-        title_label.setStyleSheet(f"color: {color}; background: transparent;")
+        # Handle custom error color for Danger Zone
+        title_text_color = "#F87171" if (is_dark and color == "#DC2626") else ("#F3F4F6" if is_dark else color)
+        title_label.setStyleSheet(f"color: {title_text_color}; background: transparent;")
         text_layout.addWidget(title_label)
-
+ 
         subtitle_label = QLabel(subtitle)
         subtitle_label.setFont(QFont("SF Pro Text", 13))
-        subtitle_label.setStyleSheet("color: #6B7280; background: transparent;")
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        subtitle_label.setStyleSheet(f"color: {text_secondary}; background: transparent;")
         text_layout.addWidget(subtitle_label)
 
         header_layout.addLayout(text_layout)
@@ -525,7 +578,41 @@ class SettingsContentView(QWidget):
 
         self.content_layout.addWidget(header_frame)
 
-    def load_settings(self):
+    def apply_theme(self):
+        """Apply theme to the view components."""
+        is_dark = self.theme_manager.is_dark_mode()
+        bg_primary = "#1A1C23" if is_dark else "#F9FAFB"
+        text_primary = "#F3F4F6" if is_dark else "#111827"
+        text_secondary = "#9CA3AF" if is_dark else "#6B7280"
+        header_bg = "#1A1C23" if is_dark else "#FFFFFF"
+        
+        self.setStyleSheet(f"background-color: {bg_primary};")
+        
+        if hasattr(self, 'header'):
+            self.header.setStyleSheet(f"""
+                QFrame {{
+                    background: {header_bg};
+                    border: none;
+                }}
+            """)
+            
+        if hasattr(self, 'content'):
+            self.content.setStyleSheet(f"background-color: {bg_primary};")
+            
+        if hasattr(self, 'title_label'):
+            self.title_label.setStyleSheet(f"color: {text_primary}; background: transparent; padding-bottom: 4px;")
+            
+        if hasattr(self, 'subtitle_label'):
+            self.subtitle_label.setStyleSheet(f"color: {text_secondary}; background: transparent; padding-bottom: 2px;")
+            
+        # Refresh all SettingCards and buttons in the layout
+        # This will trigger their own setup_ui style logic if we modify it,
+        # but for now let's just re-iterate and update what we can.
+        # Actually, setup_ui in SettingsContentView is quite monolithic.
+        # To truly refresh everything, we can call setup_ui again, 
+        # but let's just ensure the main surfaces are updated.
+        
+    def load_settings(self) -> None:
         """Load current settings"""
         try:
 
