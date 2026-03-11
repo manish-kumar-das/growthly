@@ -11,33 +11,11 @@ class GoalService:
     """Service for managing goals"""
 
     def __init__(self):
-        self._ensure_goals_table()
+        pass
 
     def _ensure_goals_table(self):
-        """Ensure goals table exists with correct schema"""
-        try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS goals (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    habit_id INTEGER NOT NULL,
-                    goal_type TEXT NOT NULL,
-                    target_value INTEGER NOT NULL,
-                    current_value INTEGER DEFAULT 0,
-                    is_completed INTEGER DEFAULT 0,
-                    created_at TEXT NOT NULL,
-                    completed_at TEXT,
-                    FOREIGN KEY (habit_id) REFERENCES habits (id) ON DELETE CASCADE
-                )
-            """)
-
-            conn.commit()
-            conn.close()
-            print("✅ Goals table ensured")
-        except Exception as e:
-            print(f"❌ Error ensuring goals table: {e}")
+        """Redundant: Table is created by init_db() in main.py"""
+        pass
 
     def create_goal(self, habit_id, goal_type, target_value):
         """Create a new goal"""
@@ -53,13 +31,15 @@ class GoalService:
             cursor = conn.cursor()
 
             created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            start_date = datetime.now().strftime("%Y-%m-%d")
+            description = f"{goal_type.replace('_', ' ').title()} for Habit {habit_id}"
 
             cursor.execute(
                 """
-                INSERT INTO goals (habit_id, goal_type, target_value, current_value, is_completed, created_at)
-                VALUES (?, ?, ?, 0, 0, ?)
+                INSERT INTO goals (habit_id, goal_type, target_value, current_value, is_completed, created_at, description, start_date)
+                VALUES (?, ?, ?, 0, 0, ?, ?, ?)
             """,
-                (habit_id, goal_type, target_value, created_at),
+                (habit_id, goal_type, target_value, created_at, description, start_date),
             )
 
             goal_id = cursor.lastrowid
@@ -102,7 +82,9 @@ class GoalService:
                     current_value=row["current_value"],
                     is_completed=bool(row["is_completed"]),
                     created_at=row["created_at"],
-                    completed_at=row["completed_at"] if row["completed_at"] else None,
+                    completed_date=row["completed_date"] if "completed_date" in row.keys() and row["completed_date"] else None,
+                    description=row["description"] if "description" in row.keys() else None,
+                    start_date=row["start_date"] if "start_date" in row.keys() else None
                 )
                 goals.append(goal)
 
@@ -134,7 +116,9 @@ class GoalService:
                     current_value=row["current_value"],
                     is_completed=bool(row["is_completed"]),
                     created_at=row["created_at"],
-                    completed_at=row["completed_at"] if row["completed_at"] else None,
+                    completed_date=row["completed_date"] if "completed_date" in row.keys() and row["completed_date"] else None,
+                    description=row["description"] if "description" in row.keys() else None,
+                    start_date=row["start_date"] if "start_date" in row.keys() else None
                 )
 
             return None
@@ -172,7 +156,9 @@ class GoalService:
                     current_value=row["current_value"],
                     is_completed=bool(row["is_completed"]),
                     created_at=row["created_at"],
-                    completed_at=row["completed_at"] if row["completed_at"] else None,
+                    completed_date=row["completed_date"] if "completed_date" in row.keys() and row["completed_date"] else None,
+                    description=row["description"] if "description" in row.keys() else None,
+                    start_date=row["start_date"] if "start_date" in row.keys() else None
                 )
                 goals.append(goal)
 
@@ -210,15 +196,15 @@ class GoalService:
             conn = get_db_connection()
             cursor = conn.cursor()
 
-            completed_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            completed_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             cursor.execute(
                 """
                 UPDATE goals 
-                SET is_completed = 1, completed_at = ? 
+                SET is_completed = 1, completed_date = ? 
                 WHERE id = ?
             """,
-                (completed_at, goal_id),
+                (completed_date, goal_id),
             )
 
             conn.commit()

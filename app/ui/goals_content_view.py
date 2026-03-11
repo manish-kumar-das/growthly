@@ -45,9 +45,10 @@ class CircularProgressGoal(QWidget):
         radius = (self.size - 10) / 2
 
         is_dark = self.theme_manager.is_dark_mode()
+        colors = self.theme_manager.get_theme()
         
         # Background circle
-        track_color = QColor("#3A3D4A") if is_dark else QColor("#E5E7EB")
+        track_color = QColor(colors.BORDER_DEFAULT if is_dark else "#E5E7EB")
         painter.setPen(QPen(track_color, 6))
         painter.drawEllipse(
             int(center - radius), int(center - radius), int(radius * 2), int(radius * 2)
@@ -55,16 +56,16 @@ class CircularProgressGoal(QWidget):
 
         # Progress arc
         if self.percentage > 0:
+            # Use a vibrant purple gradient stopped at theme colors
             gradient = QLinearGradient(0, 0, 0, self.size)
-            gradient.setColorAt(0, QColor("#667eea"))
-            gradient.setColorAt(0.5, QColor("#764ba2"))
-            gradient.setColorAt(1, QColor("#f093fb"))
+            gradient.setColorAt(0, QColor("#A78BFA")) # PUROLE_500
+            gradient.setColorAt(1, QColor("#8B5CF6")) # PURPLE_400
 
             pen = QPen(gradient, 6)
             pen.setCapStyle(Qt.RoundCap)
             painter.setPen(pen)
 
-            span_angle = int(-360 * (self.percentage / 100) * 16)
+            span_angle = int(-360 * (min(self.percentage, 100) / 100) * 16)
             painter.drawArc(
                 int(center - radius),
                 int(center - radius),
@@ -75,7 +76,7 @@ class CircularProgressGoal(QWidget):
             )
 
         # Percentage text
-        text_color = QColor("#dbdee4") if self.theme_manager.is_dark_mode() else QColor("#111827")
+        text_color = QColor(colors.TEXT_PRIMARY)
         painter.setPen(text_color)
         painter.setFont(QFont("SF Pro Display", int(self.size / 4), QFont.Bold))
         painter.drawText(self.rect(), Qt.AlignCenter, f"{int(self.percentage)}%")
@@ -115,26 +116,28 @@ class GoalCard(QFrame):
             f"{current_value} / {self.goal.target_value} {self._get_unit()}"
         )
 
-        # Status-based styling
+        # Status-based styling (Senior UX Refresh)
         days_left = self._calculate_days_left()
-        is_dark = getattr(self.parent_view, 'theme_manager', get_theme_manager()).is_dark_mode()
+        theme_manager = get_theme_manager()
+        colors = theme_manager.get_theme()
+        is_dark = theme_manager.is_dark_mode()
 
         if self.goal.is_completed:
-            bg_gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #064E3B, stop:1 #065F46)" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ECFDF5, stop:1 #D1FAE5)"
-            border_color = "#10B981"
-            status_color = "#34D399" if is_dark else "#059669"
+            bg_gradient = f"qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {colors.GREEN_50}, stop:1 {colors.BG_CARD})" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #ECFDF5, stop:1 #D1FAE5)"
+            border_color = colors.GREEN_500
+            status_color = colors.GREEN_500
         elif days_left <= 3 and progress_percent < 80:
-            bg_gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #450A0A, stop:1 #7F1D1D)" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FEF2F2, stop:1 #FEE2E2)"
-            border_color = "#EF4444"
-            status_color = "#F87171" if is_dark else "#DC2626"
+            bg_gradient = f"qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {colors.RED_50}, stop:1 {colors.BG_CARD})" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FEF2F2, stop:1 #FEE2E2)"
+            border_color = colors.RED_500
+            status_color = colors.RED_500
         elif progress_percent >= 70:
-            bg_gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #451A03, stop:1 #7C2D12)" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FEF3C7, stop:1 #FDE68A)"
-            border_color = "#F59E0B"
-            status_color = "#FB923C" if is_dark else "#D97706"
+            bg_gradient = f"qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 {colors.ORANGE_50}, stop:1 {colors.BG_CARD})" if is_dark else "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FEF3C7, stop:1 #FDE68A)"
+            border_color = colors.ORANGE_500
+            status_color = colors.ORANGE_500
         else:
-            bg_gradient = "#252732" if is_dark else "#FFFFFF"
-            border_color = "#6366F1"
-            status_color = "#dbdee4" if is_dark else "#4F46E5"
+            bg_gradient = colors.BG_CARD if is_dark else "#FFFFFF"
+            border_color = colors.BORDER_LIGHT if is_dark else "rgba(0,0,0,0.1)"
+            status_color = colors.PURPLE_500
 
         self.setObjectName("goalCard")
         border_rgba = "rgba(255, 255, 255, 0.1)" if is_dark else "rgba(0, 0, 0, 0.05)"
@@ -172,13 +175,13 @@ class GoalCard(QFrame):
         # Goal title
         title = QLabel(self.goal.goal_type.replace("_", " ").title())
         title.setFont(QFont("SF Pro Display", 20, QFont.Bold))
-        title.setStyleSheet(f"color: {'#F8F9FA' if is_dark else '#111827'};")
+        title.setStyleSheet(f"color: {colors.TEXT_PRIMARY};")
         info_layout.addWidget(title)
 
         # Habit name
         habit_label = QLabel(f"📌 {self.habit.name}")
         habit_label.setFont(QFont("SF Pro Text", 14))
-        habit_label.setStyleSheet(f"color: {'#B8BFCC' if is_dark else '#6B7280'};")
+        habit_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY};")
         info_layout.addWidget(habit_label)
 
         # ===== Progress Text (CLEAN) =====
@@ -186,7 +189,7 @@ class GoalCard(QFrame):
             f"{current_value} / {self.goal.target_value} {self._get_unit()}"
         )
         progress_text.setFont(QFont("SF Pro Display", 16, QFont.Bold))
-        progress_text_color = "#E0E7FF" if is_dark else status_color
+        progress_text_color = colors.PURPLE_600 if is_dark else status_color
         progress_text.setStyleSheet(f"color: {progress_text_color};")
         info_layout.addWidget(progress_text)
         top_row.addLayout(info_layout, 1)
@@ -251,12 +254,12 @@ class GoalCard(QFrame):
 
         # ===== Progress Bar =====
         progress_bar_container = QFrame()
-        progress_bar_container.setFixedHeight(16)
-        track_bg = "#3A3D4A" if is_dark else "#E5E7EB"
+        progress_bar_container.setFixedHeight(12) # Slimmer, more modern
+        track_bg = colors.BORDER_LIGHT if is_dark else "#E5E7EB"
         progress_bar_container.setStyleSheet(f"""
             QFrame {{
                 background-color: {track_bg};
-                border-radius: 8px;
+                border-radius: 6px;
             }}
         """)
 
@@ -266,18 +269,17 @@ class GoalCard(QFrame):
 
         progress_fill = QFrame()
         progress_fill.setObjectName("progressFill")
-        progress_fill.setStyleSheet("""
-            QFrame#progressFill {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
-                border-radius: 8px;
+        progress_fill.setStyleSheet(f"""
+            QFrame#progressFill {{
+                background: {colors.GRADIENT_PURPLE};
+                border-radius: 6px;
                 border: none;
-            }
+            }}
         """)
 
         # Use stretch instead of fixed width
-        progress_bar_layout.addWidget(progress_fill, int(progress_percent))
-        progress_bar_layout.addStretch(100 - int(progress_percent))
+        progress_bar_layout.addWidget(progress_fill, int(min(progress_percent, 100)))
+        progress_bar_layout.addStretch(100 - int(min(progress_percent, 100)))
 
         layout.addWidget(progress_bar_container)
 
@@ -293,53 +295,53 @@ class GoalCard(QFrame):
 
         if self.goal.is_completed:
             status_badge.setText("✓ Completed!")
-            status_badge.setStyleSheet("""
-                QLabel {
-                    background-color: #10B981;
-                    color: #FFFFFF;
-                    border-radius: 16px;
+            status_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {colors.GREEN_500 if is_dark else "#10B981"};
+                    color: white;
+                    border-radius: 12px;
                     padding: 0px 16px;
-                }
+                }}
             """)
         elif days_left <= 0:
             status_badge.setText("⏰ Overdue")
-            status_badge.setStyleSheet("""
-                QLabel {
-                    background-color: #EF4444;
-                    color: #FFFFFF;
-                    border-radius: 16px;
+            status_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {colors.RED_500 if is_dark else "#EF4444"};
+                    color: white;
+                    border-radius: 12px;
                     padding: 0px 16px;
-                }
+                }}
             """)
         elif days_left <= 3:
             status_badge.setText(f"⚠️ {days_left} days left!")
-            status_badge.setStyleSheet("""
-                QLabel {
-                    background-color: #F59E0B;
-                    color: #FFFFFF;
-                    border-radius: 16px;
+            status_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {colors.ORANGE_500 if is_dark else "#F59E0B"};
+                    color: white;
+                    border-radius: 12px;
                     padding: 0px 16px;
-                }
+                }}
             """)
         elif progress_percent >= 70:
             status_badge.setText("🎯 On track")
-            status_badge.setStyleSheet("""
-                QLabel {
-                    background-color: #10B981;
-                    color: #FFFFFF;
-                    border-radius: 16px;
+            status_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {colors.GREEN_500 if is_dark else "#10B981"};
+                    color: white;
+                    border-radius: 12px;
                     padding: 0px 16px;
-                }
+                }}
             """)
         else:
             status_badge.setText("📊 In progress")
-            status_badge.setStyleSheet("""
-                QLabel {
-                    background-color: #6366F1;
-                    color: #FFFFFF;
-                    border-radius: 16px;
+            status_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {colors.PURPLE_500 if is_dark else "#6366F1"};
+                    color: white;
+                    border-radius: 12px;
                     padding: 0px 16px;
-                }
+                }}
             """)
 
         bottom_row.addWidget(status_badge)
@@ -354,13 +356,13 @@ class GoalCard(QFrame):
             f"Started: {self.goal.created_at.split()[0] if hasattr(self.goal, 'created_at') else 'N/A'}"
         )
         started_label.setFont(QFont("SF Pro Text", 11))
-        started_label.setStyleSheet(f"color: {'#8B92A0' if is_dark else '#6B7280'};")
+        started_label.setStyleSheet(f"color: {colors.TEXT_TERTIARY};")
         date_layout.addWidget(started_label)
 
         if not self.goal.is_completed:
             remaining_label = QLabel(f"{days_left} days remaining")
             remaining_label.setFont(QFont("SF Pro Text", 11, QFont.Bold))
-            remaining_color = "#E0E7FF" if is_dark else status_color
+            remaining_color = colors.PURPLE_400 if is_dark else status_color
             remaining_label.setStyleSheet(f"color: {remaining_color};")
             date_layout.addWidget(remaining_label)
 
@@ -423,219 +425,186 @@ class AddGoalDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.habit_service = get_habit_service()
+        self.theme_manager = get_theme_manager()
         self.setWindowTitle("Create New Goal")
         self.setModal(True)
-        self.setFixedSize(520, 480)
+        self.setFixedSize(520, 520)
         self.setup_ui()
 
     def setup_ui(self):
-        """Setup dialog UI"""
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #FFFFFF;
-            }
+        """Setup dialog UI with theme support"""
+        colors = self.theme_manager.get_theme()
+        is_dark = self.theme_manager.is_dark_mode()
+        
+        bg_color = colors.BG_CARD
+        text_primary = colors.TEXT_PRIMARY
+        text_secondary = colors.TEXT_SECONDARY
+        border_color = colors.BORDER_LIGHT
+        input_bg = colors.BG_PRIMARY if is_dark else "#F9FAFB"
+
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg_color};
+                border-radius: 24px;
+            }}
         """)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(36, 36, 36, 36)
+        layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(24)
 
-        # Title
+        # Title Section
         title_layout = QHBoxLayout()
-
         icon = QLabel("🎯")
         icon.setFont(QFont("SF Pro Display", 32))
         title_layout.addWidget(icon)
 
         title = QLabel("Create New Goal")
         title.setFont(QFont("SF Pro Display", 26, QFont.Bold))
-        title.setStyleSheet("color: #111827;")
+        title.setStyleSheet(f"color: {text_primary};")
         title_layout.addWidget(title)
-
         title_layout.addStretch()
-
         layout.addLayout(title_layout)
 
         subtitle = QLabel("Set a target and track your progress")
         subtitle.setFont(QFont("SF Pro Text", 14))
-        subtitle.setStyleSheet("color: #6B7280;")
+        subtitle.setStyleSheet(f"color: {text_secondary};")
         layout.addWidget(subtitle)
 
-        layout.addSpacing(12)
+        # Helper for common combo styles
+        combo_style = f"""
+            QComboBox {{
+                background-color: {input_bg};
+                border: 2px solid {border_color};
+                border-radius: 12px;
+                padding: 10px 16px;
+                color: {text_primary};
+            }}
+            QComboBox:hover {{
+                border: 2px solid {colors.PURPLE_500};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                padding-right: 12px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {bg_color};
+                border: 1px solid {border_color};
+                border-radius: 8px;
+                selection-background-color: {colors.PURPLE_50};
+                selection-color: {colors.PURPLE_500};
+                outline: none;
+            }}
+        """
 
-        # Habit selector
+        # Habit Selector
         habit_label = QLabel("Select Habit:")
         habit_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        habit_label.setStyleSheet("color: #374151;")
+        habit_label.setStyleSheet(f"color: {text_primary};")
         layout.addWidget(habit_label)
 
         self.habit_combo = QComboBox()
         self.habit_combo.setFont(QFont("SF Pro Text", 14))
-        self.habit_combo.setFixedHeight(48)
-        self.habit_combo.setCursor(Qt.PointingHandCursor)
-        self.habit_combo.setStyleSheet("""
-            QComboBox {
-                background-color: #F9FAFB;
-                border: 2px solid #E5E7EB;
-                border-radius: 12px;
-                padding: 10px 16px;
-                color: #111827;
-            }
-            QComboBox:hover {
-                border: 2px solid #6366F1;
-                background-color: #FFFFFF;
-            }
-            QComboBox::drop-down {
-                border: none;
-                padding-right: 12px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #FFFFFF;
-                border: 2px solid #E5E7EB;
-                border-radius: 8px;
-                selection-background-color: #EEF2FF;
-                selection-color: #4F46E5;
-                padding: 4px;
-            }
-        """)
-
+        self.habit_combo.setFixedHeight(52)
+        self.habit_combo.setStyleSheet(combo_style)
+        
         habits = self.habit_service.get_all_habits()
         if not habits:
-            QMessageBox.warning(
-                self,
-                "No Habits",
-                "Please create at least one habit before creating a goal.",
-            )
+            QMessageBox.warning(self, "No Habits", "Please create at least one habit first.")
             self.reject()
             return
-
         for habit in habits:
             self.habit_combo.addItem(habit.name, habit.id)
-
         layout.addWidget(self.habit_combo)
 
-        # Goal type
+        # Goal Type
         type_label = QLabel("Goal Type:")
         type_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        type_label.setStyleSheet("color: #374151;")
+        type_label.setStyleSheet(f"color: {text_primary};")
         layout.addWidget(type_label)
 
         self.type_combo = QComboBox()
         self.type_combo.setFont(QFont("SF Pro Text", 14))
-        self.type_combo.setFixedHeight(48)
-        self.type_combo.setCursor(Qt.PointingHandCursor)
-        self.type_combo.setStyleSheet("""
-            QComboBox {
-                background-color: #F9FAFB;
-                border: 2px solid #E5E7EB;
-                border-radius: 12px;
-                padding: 10px 16px;
-                color: #111827;
-            }
-            QComboBox:hover {
-                border: 2px solid #6366F1;
-                background-color: #FFFFFF;
-            }
-            QComboBox::drop-down {
-                border: none;
-                padding-right: 12px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #FFFFFF;
-                border: 2px solid #E5E7EB;
-                border-radius: 8px;
-                selection-background-color: #EEF2FF;
-                selection-color: #4F46E5;
-                padding: 4px;
-            }
-        """)
-
-        # CRITICAL FIX: Store value in UserRole, not as second parameter
+        self.type_combo.setFixedHeight(52)
+        self.type_combo.setStyleSheet(combo_style)
         self.type_combo.addItem("🔥 7 Day Streak", "7_day_streak")
         self.type_combo.addItem("🌟 30 Day Streak", "30_day_streak")
         self.type_combo.addItem("💯 100 Completions", "100_completions")
-
-        # Set default
-        self.type_combo.setCurrentIndex(1)  # 30 day streak
-
+        self.type_combo.setCurrentIndex(1)
         self.type_combo.currentIndexChanged.connect(self._update_target_value)
-
         layout.addWidget(self.type_combo)
 
-        # Target value
+        # Target Value
         target_label = QLabel("Target Value:")
         target_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        target_label.setStyleSheet("color: #374151;")
+        target_label.setStyleSheet(f"color: {text_primary};")
         layout.addWidget(target_label)
 
         self.target_spin = QSpinBox()
         self.target_spin.setFont(QFont("SF Pro Text", 14))
-        self.target_spin.setFixedHeight(48)
+        self.target_spin.setFixedHeight(52)
         self.target_spin.setMinimum(1)
         self.target_spin.setMaximum(365)
         self.target_spin.setValue(30)
-        self.target_spin.setCursor(Qt.PointingHandCursor)
-        self.target_spin.setStyleSheet("""
-            QSpinBox {
-                background-color: #F9FAFB;
-                border: 2px solid #E5E7EB;
+        self.target_spin.setStyleSheet(f"""
+            QSpinBox {{
+                background-color: {input_bg};
+                border: 2px solid {border_color};
                 border-radius: 12px;
                 padding: 10px 16px;
-                color: #111827;
-            }
-            QSpinBox:hover {
-                border: 2px solid #6366F1;
-                background-color: #FFFFFF;
-            }
-            QSpinBox::up-button, QSpinBox::down-button {
-                width: 20px;
+                color: {text_primary};
+            }}
+            QSpinBox:hover {{
+                border: 2px solid {colors.PURPLE_500};
+            }}
+            QSpinBox::up-button, QSpinBox::down-button {{
+                width: 24px;
                 border: none;
-            }
+                background: transparent;
+            }}
         """)
         layout.addWidget(self.target_spin)
 
         layout.addStretch()
 
-        # Buttons
+        # Action Buttons
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(12)
+        button_layout.setSpacing(16)
 
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        cancel_btn.setFixedHeight(48)
+        cancel_btn.setFixedHeight(52)
         cancel_btn.setCursor(Qt.PointingHandCursor)
-        cancel_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #F3F4F6;
-                color: #374151;
-                border: none;
-                border-radius: 12px;
-                padding: 0px 28px;
-            }
-            QPushButton:hover {
-                background-color: #E5E7EB;
-            }
+        cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {colors.BG_PRIMARY if is_dark else "#F3F4F6"};
+                color: {text_primary};
+                border: 1px solid {border_color};
+                border-radius: 14px;
+                padding: 0px 32px;
+            }}
+            QPushButton:hover {{
+                background-color: {colors.BORDER_LIGHT};
+            }}
         """)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
 
         create_btn = QPushButton("Create Goal")
         create_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
-        create_btn.setFixedHeight(48)
+        create_btn.setFixedHeight(52)
         create_btn.setCursor(Qt.PointingHandCursor)
-        create_btn.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #667eea, stop:0.5 #764ba2, stop:1 #f093fb);
-                color: #FFFFFF;
+        create_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {colors.GRADIENT_PURPLE};
+                color: white;
                 border: none;
-                border-radius: 12px;
-                padding: 0px 32px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5568d3, stop:0.5 #6a4191, stop:1 #e07af0);
-            }
+                border-radius: 14px;
+                padding: 0px 36px;
+            }}
+            QPushButton:hover {{
+                background: {colors.GRADIENT_PURPLE_VIBRANT};
+            }}
         """)
         create_btn.clicked.connect(self.accept)
         button_layout.addWidget(create_btn)
@@ -694,11 +663,20 @@ class GoalsContentView(QWidget):
         self.load_goals()
 
     def setup_ui(self):
-        """Setup goals UI"""
+        """Setup goals UI with premium dark mode support"""
         colors = self.theme_manager.get_theme()
-        is_dark = self.theme_manager.is_dark_mode()
-        bg_primary = "#1A1C23" if is_dark else colors.BG_PRIMARY
-        self.setStyleSheet(f"background-color: {bg_primary};")
+        
+        bg_primary = colors.BG_PRIMARY
+        self.setStyleSheet(f"""
+            GoalsContentView {{ 
+                background-color: {bg_primary}; 
+            }}
+            QLabel {{ 
+                border: none; 
+                background: transparent; 
+                text-decoration: none;
+            }}
+        """)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -706,9 +684,8 @@ class GoalsContentView(QWidget):
 
         # Header
         self.header = QFrame()
-        self.header.setMinimumHeight(120)
-        is_dark = self.theme_manager.is_dark_mode()
-        header_bg = "#1A1C23" if is_dark else "#FFFFFF"
+        self.header.setMinimumHeight(140)
+        header_bg = colors.BG_PRIMARY
         self.header.setStyleSheet(f"""
             QFrame {{
                 background-color: {header_bg};
@@ -725,7 +702,7 @@ class GoalsContentView(QWidget):
 
         icon = QLabel("🎯")
         icon.setFont(QFont("SF Pro Display", 32))
-        icon.setStyleSheet("background: transparent;")
+        icon.setStyleSheet("background: transparent; border: none;")
         title_section.addWidget(icon)
 
         title_text_layout = QVBoxLayout()
@@ -734,7 +711,7 @@ class GoalsContentView(QWidget):
         self.title_label = QLabel("Goals & Milestones")
         self.title_label.setFont(QFont("SF Pro Display", 28, QFont.Bold))
         self.title_label.setStyleSheet(
-            f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;"
+            f"color: {colors.TEXT_PRIMARY}; background: transparent; border: none;"
         )
         self.title_label.setWordWrap(True)
         title_text_layout.addWidget(self.title_label)
@@ -742,7 +719,7 @@ class GoalsContentView(QWidget):
         self.subtitle_label = QLabel("Set targets and track your progress")
         self.subtitle_label.setFont(QFont("SF Pro Text", 14))
         self.subtitle_label.setStyleSheet(
-            f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;"
+            f"color: {colors.TEXT_SECONDARY}; background: transparent; border: none; text-decoration: none;"
         )
         self.subtitle_label.setWordWrap(True)
         title_text_layout.addWidget(self.subtitle_label)
@@ -782,56 +759,71 @@ class GoalsContentView(QWidget):
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll.setStyleSheet("""
-            QScrollArea {
+        
+        handle_color = colors.PURPLE_500
+        scroll_bg = colors.BG_PRIMARY
+        scroll.setStyleSheet(f"""
+            QScrollArea {{
                 border: none;
-                background-color: transparent;
-            }
-            QScrollBar:vertical {
-                background: #F3F4F6;
-                width: 10px;
-                border-radius: 5px;
-            }
-            QScrollBar::handle:vertical {
-                background: #6366F1;
-                border-radius: 5px;
-            }
+                background-color: {scroll_bg};
+            }}
+            QScrollBar:vertical {{
+                background: transparent;
+                width: 8px;
+                margin: 0px 4px 0px 0px;
+            }}
+            QScrollBar::handle:vertical {{
+                background: {handle_color};
+                min-height: 40px;
+                border-radius: 4px;
+                opacity: 0.6;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
         """)
 
         self.content = QWidget()
-        is_dark = self.theme_manager.is_dark_mode()
-        content_bg = "#1A1C23" if is_dark else "#FFFFFF"
-        self.content.setStyleSheet(f"background-color: {content_bg};")
+        self.content.setObjectName("mainContent")
+        self.content.setStyleSheet(f"QWidget#mainContent {{ background-color: {colors.BG_PRIMARY}; }}")
         self.content_layout = QVBoxLayout(self.content)
-        self.content_layout.setContentsMargins(40, 28, 40, 28)
-        self.content_layout.setSpacing(24)
+        self.content_layout.setContentsMargins(40, 40, 40, 40)
+        self.content_layout.setSpacing(28)
 
         scroll.setWidget(self.content)
         layout.addWidget(scroll)
 
     def apply_theme(self):
-        """Apply the global color theme."""
+        """Apply theme dynamically"""
         colors = self.theme_manager.get_theme()
-        is_dark = self.theme_manager.is_dark_mode()
-        header_bg = "#1A1C23" if is_dark else colors.BG_PRIMARY
+        
+        self.setStyleSheet(f"""
+            GoalsContentView {{ 
+                background-color: {colors.BG_PRIMARY}; 
+            }}
+            QLabel {{ 
+                border: none; 
+                background: transparent; 
+                text-decoration: none;
+            }}
+        """)
         
         if hasattr(self, 'header'):
             self.header.setStyleSheet(f"""
                 QFrame {{
-                    background-color: {header_bg};
+                    background-color: {colors.BG_PRIMARY};
                     border: none;
                 }}
             """)
             
         if hasattr(self, 'content'):
-            content_bg = "#1A1C23" if is_dark else colors.BG_PRIMARY
-            self.content.setStyleSheet(f"background-color: {content_bg};")
+            self.content.setStyleSheet(f"QWidget#mainContent {{ background-color: {colors.BG_PRIMARY}; }}")
             
         if hasattr(self, 'title_label'):
-            self.title_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; padding-bottom: 4px;")
+            self.title_label.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; border: none; text-decoration: none;")
             
         if hasattr(self, 'subtitle_label'):
-            self.subtitle_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; padding-bottom: 2px;")
+            self.subtitle_label.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; border: none; text-decoration: none;")
 
     def load_goals(self):
         """Load all goals"""
@@ -844,41 +836,91 @@ class GoalsContentView(QWidget):
         goals = self.goal_service.get_all_goals(include_completed=True)
 
         if not goals:
-            # Empty state
+            # Modern Empty State
+            is_dark = self.theme_manager.is_dark_mode()
+            colors = self.theme_manager.get_theme()
+            
             empty_container = QFrame()
-            empty_container.setStyleSheet("""
-                QFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                        stop:0 #FFFFFF, stop:1 #F9FAFB);
-                    border: 3px dashed #E5E7EB;
-                    border-radius: 24px;
-                }
+            empty_container.setFixedHeight(450)
+            
+            card_bg = colors.BG_CARD if is_dark else "white"
+            border_rgba = "rgba(255, 255, 255, 0.05)" if is_dark else "rgba(0, 0, 0, 0.05)"
+            
+            empty_container.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {card_bg};
+                    border: 1px solid {border_rgba};
+                    border-radius: 32px;
+                }}
+                QLabel {{
+                    border: none;
+                    background: transparent;
+                }}
             """)
-            empty_container.setMinimumHeight(300)
+            
+            # Add subtle shadow for empty state
+            empty_shadow = QGraphicsDropShadowEffect()
+            empty_shadow.setBlurRadius(40)
+            empty_shadow.setColor(QColor(0, 0, 0, 50))
+            empty_shadow.setOffset(0, 15)
+            empty_container.setGraphicsEffect(empty_shadow)
 
             empty_layout = QVBoxLayout(empty_container)
             empty_layout.setAlignment(Qt.AlignCenter)
-            empty_layout.setSpacing(16)
+            empty_layout.setContentsMargins(40, 40, 40, 40)
+            empty_layout.setSpacing(24)
 
+            # Circular container for icon
+            icon_container = QFrame()
+            icon_container.setFixedSize(140, 140)
+            icon_container.setStyleSheet(f"""
+                QFrame {{
+                    background: {colors.PURPLE_50 if is_dark else "#F3F4F6"};
+                    border-radius: 70px;
+                }}
+            """)
+            icon_layout = QVBoxLayout(icon_container)
+            icon_layout.setAlignment(Qt.AlignCenter)
+            
             emoji = QLabel("🎯")
-            emoji.setFont(QFont("SF Pro Display", 80))
+            emoji.setFont(QFont("SF Pro Display", 64))
             emoji.setAlignment(Qt.AlignCenter)
             emoji.setStyleSheet("background: transparent;")
-            empty_layout.addWidget(emoji)
+            icon_layout.addWidget(emoji)
+            
+            empty_layout.addWidget(icon_container, 0, Qt.AlignCenter)
 
-            empty_title = QLabel("No Goals Yet")
-            empty_title.setFont(QFont("SF Pro Display", 26, QFont.Bold))
+            empty_title = QLabel("Focus Your Journey")
+            empty_title.setFont(QFont("SF Pro Display", 28, QFont.Bold))
             empty_title.setAlignment(Qt.AlignCenter)
-            empty_title.setStyleSheet("color: #374151; background: transparent;")
+            empty_title.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; background: transparent; border: none;")
             empty_layout.addWidget(empty_title)
 
             empty_text = QLabel(
-                "Create your first goal to start tracking your progress!"
+                "Break down your habits into achievable goals.\nSet a target and watch your consistency grow."
             )
             empty_text.setFont(QFont("SF Pro Text", 15))
             empty_text.setAlignment(Qt.AlignCenter)
-            empty_text.setStyleSheet("color: #9CA3AF; background: transparent;")
+            empty_text.setStyleSheet(f"color: {colors.TEXT_SECONDARY}; background: transparent; border: none;")
             empty_layout.addWidget(empty_text)
+            
+            start_btn = QPushButton("Create Your First Goal")
+            start_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+            start_btn.setFixedSize(240, 52)
+            start_btn.setCursor(Qt.PointingHandCursor)
+            start_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: {colors.GRADIENT_PURPLE};
+                    color: white;
+                    border-radius: 16px;
+                    border: none;
+                }}
+                QPushButton:hover {{
+                    background: {colors.GRADIENT_PURPLE_VIBRANT};
+                }}
+            """)
+            start_btn.clicked.connect(self.show_add_goal_dialog)
+            empty_layout.addWidget(start_btn, 0, Qt.AlignCenter)
 
             self.content_layout.addWidget(empty_container)
             self.content_layout.addStretch()
@@ -891,10 +933,10 @@ class GoalsContentView(QWidget):
         # Active goals section
         if active_goals:
             is_dark = self.theme_manager.is_dark_mode()
+            colors = self.theme_manager.get_theme()
             active_header = QLabel(f"🎯 Active Goals ({len(active_goals)})")
             active_header.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-            header_color = "#B8BFCC" if is_dark else "#111827"
-            active_header.setStyleSheet(f"color: {header_color};")
+            active_header.setStyleSheet(f"color: {colors.TEXT_PRIMARY}; margin-top: 10px;")
             self.content_layout.addWidget(active_header)
 
             for goal in active_goals:
@@ -905,11 +947,12 @@ class GoalsContentView(QWidget):
 
         # Completed goals section
         if completed_goals:
-            self.content_layout.addSpacing(20)
+            self.content_layout.addSpacing(32)
+            colors = self.theme_manager.get_theme()
 
             completed_header = QLabel(f"✅ Completed Goals ({len(completed_goals)})")
             completed_header.setFont(QFont("SF Pro Display", 22, QFont.Bold))
-            completed_header.setStyleSheet("color: #10B981;")
+            completed_header.setStyleSheet(f"color: {colors.GREEN_500};")
             self.content_layout.addWidget(completed_header)
 
             for goal in completed_goals:
