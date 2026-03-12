@@ -428,7 +428,7 @@ class AddGoalDialog(QDialog):
         self.theme_manager = get_theme_manager()
         self.setWindowTitle("Create New Goal")
         self.setModal(True)
-        self.setFixedSize(520, 520)
+        self.setFixedSize(540, 620) # Slightly taller and wider for balance
         self.setup_ui()
 
     def setup_ui(self):
@@ -457,11 +457,13 @@ class AddGoalDialog(QDialog):
         title_layout = QHBoxLayout()
         icon = QLabel("🎯")
         icon.setFont(QFont("SF Pro Display", 32))
+        icon.setFixedSize(48, 48) # Fixed size to prevent cutting
+        icon.setStyleSheet("background: transparent; border: none;")
         title_layout.addWidget(icon)
 
         title = QLabel("Create New Goal")
         title.setFont(QFont("SF Pro Display", 26, QFont.Bold))
-        title.setStyleSheet(f"color: {text_primary};")
+        title.setStyleSheet(f"color: {text_primary}; background: transparent; border: none;")
         title_layout.addWidget(title)
         title_layout.addStretch()
         layout.addLayout(title_layout)

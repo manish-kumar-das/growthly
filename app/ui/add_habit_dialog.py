@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QTextEdit,
     QComboBox,
     QPushButton,
     QMessageBox,
@@ -16,7 +15,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from app.services.habit_service import get_habit_service
-from app.utils.constants import FREQUENCY_DAILY, FREQUENCY_WEEKLY, CATEGORIES
+from app.utils.constants import CATEGORIES
+from app.themes import get_theme_manager
 
 
 class AddHabitDialog(QDialog):
@@ -25,238 +25,147 @@ class AddHabitDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.habit_service = get_habit_service()
+        self.theme_manager = get_theme_manager()
         self.setup_ui()
 
     def setup_ui(self):
-        """Setup the dialog UI"""
+        """Setup the dialog UI with theme support"""
+        colors = self.theme_manager.get_theme()
+        is_dark = self.theme_manager.is_dark_mode()
+
+        bg_color = colors.BG_CARD
+        text_primary = colors.TEXT_PRIMARY
+        text_secondary = colors.TEXT_SECONDARY
+        border_color = colors.BORDER_LIGHT
+        input_bg = colors.BG_PRIMARY if is_dark else "#F9FAFB"
+
         self.setWindowTitle("Add New Habit")
         self.setModal(True)
-        self.setMinimumWidth(500)
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #1C1F26;
-            }
+        self.setFixedSize(540, 520) # Made shorter since fields were removed
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg_color};
+                border-radius: 24px;
+            }}
         """)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(20)
-        layout.setContentsMargins(32, 32, 32, 32)
+        layout.setContentsMargins(40, 40, 40, 40)
+        layout.setSpacing(24)
 
-        # Title
+        # Title Section
+        title_layout = QHBoxLayout()
+        icon = QLabel("✨")
+        icon.setFont(QFont("SF Pro Display", 32))
+        icon.setStyleSheet("background: transparent; border: none;") # Fixed emoji background
+        title_layout.addWidget(icon)
+
         title = QLabel("Create New Habit")
-        title.setFont(QFont("Inter", 24, QFont.Bold))
-        title.setStyleSheet("color: #E4E6EB; background: transparent;")
-        layout.addWidget(title)
+        title.setFont(QFont("SF Pro Display", 26, QFont.Bold))
+        title.setStyleSheet(f"color: {text_primary}; background: transparent; border: none;")
+        title_layout.addWidget(title)
+        title_layout.addStretch()
+        layout.addLayout(title_layout)
 
         subtitle = QLabel("Build consistency one day at a time")
-        subtitle.setFont(QFont("Inter", 13))
-        subtitle.setStyleSheet(
-            "color: #9AA0A6; background: transparent; margin-bottom: 8px;"
-        )
+        subtitle.setFont(QFont("SF Pro Text", 14))
+        subtitle.setStyleSheet(f"color: {text_secondary}; background: transparent;")
         layout.addWidget(subtitle)
+
+        # Helper for common field styles
+        input_style = f"""
+            QLineEdit, QComboBox {{
+                background-color: {input_bg};
+                border: 2px solid {border_color};
+                border-radius: 12px;
+                padding: 10px 16px;
+                color: {text_primary};
+            }}
+            QLineEdit:focus, QComboBox:hover {{
+                border: 2px solid {colors.PURPLE_500};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+                padding-right: 12px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {bg_color};
+                border: 1px solid {border_color};
+                border-radius: 8px;
+                selection-background-color: {colors.PURPLE_50};
+                selection-color: {colors.PURPLE_500};
+                outline: none;
+            }}
+        """
 
         # Habit name
         name_label = QLabel("Habit Name")
-        name_label.setFont(QFont("Inter", 13, QFont.Medium))
-        name_label.setStyleSheet(
-            "color: #E4E6EB; background: transparent; margin-top: 8px;"
-        )
+        name_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        name_label.setStyleSheet(f"color: {text_primary}; background: transparent;")
         layout.addWidget(name_label)
 
         self.name_input = QLineEdit()
-        self.name_input.setPlaceholderText(
-            "e.g., Morning Exercise, Read Books, Meditate"
-        )
-        self.name_input.setFont(QFont("Inter", 14))
-        self.name_input.setFixedHeight(48)
-        self.name_input.setStyleSheet("""
-            QLineEdit {
-                padding: 12px 16px;
-                border: 2px solid #2A2D35;
-                border-radius: 10px;
-                background-color: #20232B;
-                color: #E4E6EB;
-                selection-background-color: #4FD1C5;
-            }
-            QLineEdit:focus {
-                border: 2px solid #4FD1C5;
-                background-color: #1C1F26;
-            }
-        """)
+        self.name_input.setPlaceholderText("e.g., Morning Exercise, Read Books, Meditate")
+        self.name_input.setFont(QFont("SF Pro Text", 14))
+        self.name_input.setFixedHeight(52)
+        self.name_input.setStyleSheet(input_style)
         layout.addWidget(self.name_input)
 
         # Category
         category_label = QLabel("Category")
-        category_label.setFont(QFont("Inter", 13, QFont.Medium))
-        category_label.setStyleSheet(
-            "color: #E4E6EB; background: transparent; margin-top: 8px;"
-        )
+        category_label.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        category_label.setStyleSheet(f"color: {text_primary}; background: transparent;")
         layout.addWidget(category_label)
 
         self.category_combo = QComboBox()
         for category_name, emoji in CATEGORIES:
             self.category_combo.addItem(f"{emoji} {category_name}", category_name)
-        self.category_combo.setFont(QFont("Inter", 13))
-        self.category_combo.setFixedHeight(48)
+        self.category_combo.setFont(QFont("SF Pro Text", 14))
+        self.category_combo.setFixedHeight(52)
         self.category_combo.setCursor(Qt.PointingHandCursor)
-        self.category_combo.setStyleSheet("""
-            QComboBox {
-                padding: 12px 16px;
-                border: 2px solid #2A2D35;
-                border-radius: 10px;
-                background-color: #20232B;
-                color: #E4E6EB;
-            }
-            QComboBox:hover {
-                border: 2px solid #4FD1C5;
-            }
-            QComboBox::drop-down {
-                border: none;
-                padding-right: 12px;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 6px solid #9AA0A6;
-                margin-right: 8px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #20232B;
-                border: 1px solid #2A2D35;
-                border-radius: 8px;
-                padding: 4px;
-                color: #E4E6EB;
-                selection-background-color: #4FD1C5;
-                selection-color: #0F1115;
-            }
-        """)
+        self.category_combo.setStyleSheet(input_style)
         layout.addWidget(self.category_combo)
 
-        # Description
-        desc_label = QLabel("Description (Optional)")
-        desc_label.setFont(QFont("Inter", 13, QFont.Medium))
-        desc_label.setStyleSheet(
-            "color: #E4E6EB; background: transparent; margin-top: 8px;"
-        )
-        layout.addWidget(desc_label)
+        layout.addStretch()
 
-        self.desc_input = QTextEdit()
-        self.desc_input.setPlaceholderText("Add details about your habit...")
-        self.desc_input.setFont(QFont("Inter", 13))
-        self.desc_input.setFixedHeight(90)
-        self.desc_input.setStyleSheet("""
-            QTextEdit {
-                padding: 12px 16px;
-                border: 2px solid #2A2D35;
-                border-radius: 10px;
-                background-color: #20232B;
-                color: #E4E6EB;
-                selection-background-color: #4FD1C5;
-            }
-            QTextEdit:focus {
-                border: 2px solid #4FD1C5;
-                background-color: #1C1F26;
-            }
-        """)
-        layout.addWidget(self.desc_input)
-
-        # Frequency
-        freq_label = QLabel("Frequency")
-        freq_label.setFont(QFont("Inter", 13, QFont.Medium))
-        freq_label.setStyleSheet(
-            "color: #E4E6EB; background: transparent; margin-top: 8px;"
-        )
-        layout.addWidget(freq_label)
-
-        self.frequency_combo = QComboBox()
-        self.frequency_combo.addItem("📅 Daily", FREQUENCY_DAILY)
-        self.frequency_combo.addItem("📆 Weekly", FREQUENCY_WEEKLY)
-        self.frequency_combo.setFont(QFont("Inter", 13))
-        self.frequency_combo.setFixedHeight(48)
-        self.frequency_combo.setCursor(Qt.PointingHandCursor)
-        self.frequency_combo.setStyleSheet("""
-            QComboBox {
-                padding: 12px 16px;
-                border: 2px solid #2A2D35;
-                border-radius: 10px;
-                background-color: #20232B;
-                color: #E4E6EB;
-            }
-            QComboBox:hover {
-                border: 2px solid #4FD1C5;
-            }
-            QComboBox::drop-down {
-                border: none;
-                padding-right: 12px;
-            }
-            QComboBox::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 6px solid #9AA0A6;
-                margin-right: 8px;
-            }
-            QComboBox QAbstractItemView {
-                background-color: #20232B;
-                border: 1px solid #2A2D35;
-                border-radius: 8px;
-                padding: 4px;
-                color: #E4E6EB;
-                selection-background-color: #4FD1C5;
-                selection-color: #0F1115;
-            }
-        """)
-        layout.addWidget(self.frequency_combo)
-
-        layout.addSpacing(12)
-
-        # Buttons
+        # Action Buttons
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(12)
+        button_layout.setSpacing(16)
 
         cancel_btn = QPushButton("Cancel")
-        cancel_btn.setFont(QFont("Inter", 13, QFont.Medium))
-        cancel_btn.setFixedHeight(48)
+        cancel_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        cancel_btn.setFixedHeight(52)
         cancel_btn.setCursor(Qt.PointingHandCursor)
-        cancel_btn.setStyleSheet("""
-            QPushButton {
-                padding: 12px 32px;
-                border: 2px solid #4A4D56;
-                border-radius: 10px;
-                color: #9AA0A6;
-                background-color: transparent;
-            }
-            QPushButton:hover {
-                border: 2px solid #7C83FD;
-                color: #E4E6EB;
-                background-color: rgba(124, 131, 253, 0.1);
-            }
+        cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {colors.BG_PRIMARY if is_dark else "#F3F4F6"};
+                color: {text_primary};
+                border: 1px solid {border_color};
+                border-radius: 14px;
+                padding: 0px 32px;
+            }}
+            QPushButton:hover {{
+                background-color: {colors.BORDER_LIGHT};
+            }}
         """)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
 
         save_btn = QPushButton("Create Habit")
-        save_btn.setFont(QFont("Inter", 13, QFont.Bold))
-        save_btn.setFixedHeight(48)
+        save_btn.setFont(QFont("SF Pro Text", 14, QFont.Bold))
+        save_btn.setFixedHeight(52)
         save_btn.setCursor(Qt.PointingHandCursor)
-        save_btn.setStyleSheet("""
-            QPushButton {
-                padding: 12px 32px;
+        save_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {colors.GRADIENT_PURPLE};
+                color: white;
                 border: none;
-                border-radius: 10px;
-                color: #FFFFFF;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #4FD1C5, stop:1 #7C83FD);
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #45B8AD, stop:1 #6B6FE5);
-            }
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3A9D93, stop:1 #5A5ECD);
-            }
+                border-radius: 14px;
+                padding: 0px 36px;
+            }}
+            QPushButton:hover {{
+                background: {colors.GRADIENT_PURPLE_VIBRANT};
+            }}
         """)
         save_btn.clicked.connect(self.save_habit)
         button_layout.addWidget(save_btn)
@@ -266,9 +175,9 @@ class AddHabitDialog(QDialog):
     def save_habit(self):
         """Validate and save the habit"""
         name = self.name_input.text().strip()
-        description = self.desc_input.toPlainText().strip()
+        description = "" # Default empty description
         category = self.category_combo.currentData()
-        frequency = self.frequency_combo.currentData()
+        frequency = "daily" # Default to daily frequency
 
         if not name:
             self.show_error("Validation Error", "Please enter a habit name")
@@ -289,26 +198,28 @@ class AddHabitDialog(QDialog):
             self.show_error("Error", f"Failed to create habit:\n{str(e)}")
 
     def show_error(self, title, message):
-        """Show error message"""
+        """Show error message with theme support"""
+        colors = self.theme_manager.get_theme()
+        
         msg = QMessageBox(self)
         msg.setIcon(QMessageBox.Warning)
         msg.setWindowTitle(title)
         msg.setText(message)
-        msg.setStyleSheet("""
-            QMessageBox {
-                background-color: #1C1F26;
-            }
-            QMessageBox QLabel {
-                color: #E4E6EB;
-            }
-            QPushButton {
-                background-color: #4FD1C5;
-                color: #0F1115;
+        msg.setStyleSheet(f"""
+            QMessageBox {{
+                background-color: {colors.BG_CARD};
+            }}
+            QMessageBox QLabel {{
+                color: {colors.TEXT_PRIMARY};
+            }}
+            QPushButton {{
+                background-color: {colors.PURPLE_500};
+                color: white;
                 border: none;
                 border-radius: 6px;
                 padding: 8px 20px;
                 font-weight: bold;
                 min-width: 80px;
-            }
+            }}
         """)
         msg.exec()
