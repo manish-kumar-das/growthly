@@ -9,37 +9,35 @@
 - [x] Clean, modern UI
 - [x] Add/Delete habits
 - [x] Persistent data storage
+- [x] Edit existing habits
+- [x] Dark mode toggle
+- [x] Profile management and avatar cropping
+- [x] Goal tracking system
+- [x] Analytics dashboard with charts
+- [x] Categories and habit management
+- [x] Daily reminders and notification engine
 
 ## 🔄 Version 1.1 (Planned)
-- [ ] Edit existing habits
-- [ ] Habit categories/tags
-- [ ] Search and filter habits
+- [ ] Habit categories/tags (Advanced filtering)
+- [ ] Search habits
 - [ ] Sorting options (by name, streak, date)
 - [ ] Keyboard shortcuts
 - [ ] Undo delete functionality
-
-## 🔮 Version 1.2 (Planned)
-- [ ] Statistics dashboard
-- [ ] Completion rate charts
-- [ ] Calendar heatmap view
-- [ ] Weekly/monthly trends
-- [ ] Best streak visualization
 - [ ] Data export (CSV, JSON)
 - [ ] Data import
 - [ ] Backup and restore
 
-## �� Version 1.3 (Planned)
-- [ ] Dark mode toggle
-- [ ] Custom themes
-- [ ] Multiple color schemes
-- [ ] Customizable fonts
+## 🔮 Version 1.2 (Planned)
+- [ ] Calendar heatmap view
+- [ ] Weekly/monthly trends (Advanced)
+- [ ] Best streak visualization
+- [ ] Custom themes (User defined)
 - [ ] Layout preferences
 
 ## 🔔 Version 2.0 (Future)
-- [ ] Daily reminders/notifications
 - [ ] Desktop notifications
 - [ ] Habit scheduling (specific times)
-- [ ] Weekly habits support
+- [ ] Weekly habits support (Advanced scheduling)
 - [ ] Custom frequency patterns
 - [ ] Habit notes/journal
 - [ ] Motivational quotes
@@ -61,7 +59,7 @@
 - [ ] Cross-platform builds (Mac, Linux)
 - [ ] Auto-update functionality
 
-## �� User Suggestions
+## 💬 User Suggestions
 *This section will be updated based on user feedback*
 
 ---

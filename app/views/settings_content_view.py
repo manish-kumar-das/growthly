@@ -140,10 +140,12 @@ class ToggleSwitch(QCheckBox):
             }
         """)
 
-    def nextCheckState(self):
-        super().nextCheckState()
+        # Connect toggled signal to animation
+        self.toggled.connect(self._handle_toggled)
+
+    def _handle_toggled(self, checked):
         self.anim.stop()
-        self.anim.setEndValue(32 if self.isChecked() else 4)
+        self.anim.setEndValue(32 if checked else 4)
         self.anim.start()
 
     @Property(int)
@@ -324,6 +326,7 @@ class SettingsContentView(QWidget):
 
         # Enable notifications
         self.notifications_check = ToggleSwitch()
+        self.notifications_check.toggled.connect(self._auto_save_notifications)
 
         notif_card = SettingCard(
             "🔔",
@@ -655,22 +658,32 @@ class SettingsContentView(QWidget):
         if hasattr(self, 'subtitle_label'):
             self.subtitle_label.setStyleSheet(f"color: {text_secondary}; background: transparent; padding-bottom: 2px;")
             
-        # Refresh all SettingCards and buttons in the layout
-        # This will trigger their own setup_ui style logic if we modify it,
-        # but for now let's just re-iterate and update what we can.
-        # Actually, setup_ui in SettingsContentView is quite monolithic.
-        # To truly refresh everything, we can call setup_ui again, 
-        # but let's just ensure the main surfaces are updated.
+            # but for now let's just re-iterate and update what we can.
+            # Actually, setup_ui in SettingsContentView is quite monolithic.
+            # To truly refresh everything, we can call setup_ui again, 
+            # but let's just ensure the main surfaces are updated.
         
+    def _auto_save_notifications(self, checked):
+        """Auto-save notification toggle state"""
+        try:
+            self.settings_service.set_notifications_enabled(checked)
+            logger.info(f"✅ Auto-saved notification setting: {checked}")
+        except Exception as e:
+            logger.error(f"Error auto-saving notifications: {e}")
+
     def load_settings(self) -> None:
         """Load current settings"""
         try:
-
-
+            # Temporarily block signals to avoid triggering auto-save during load
+            self.notifications_check.blockSignals(True)
+            
             # Notifications
-            self.notifications_check.setChecked(
-                self.settings_service.is_notifications_enabled()
-            )
+            is_enabled = self.settings_service.is_notifications_enabled()
+            self.notifications_check.setChecked(is_enabled)
+            
+            # Manually update thumb position for initial load
+            self.notifications_check._thumb_pos = (32 if is_enabled else 4)
+            self.notifications_check.update()
 
             # Notification time
             time_str = self.settings_service.get_notification_time()
@@ -680,8 +693,12 @@ class SettingsContentView(QWidget):
             except Exception:
                 self.notification_time.setTime(QTime(9, 0))
 
+            self.notifications_check.blockSignals(False)
+
         except Exception as e:
             logger.info(f"Error loading settings: {e}")
+            if hasattr(self, 'notifications_check'):
+                self.notifications_check.blockSignals(False)
 
     def save_settings(self):
         """Save all settings"""

@@ -42,7 +42,7 @@ CATEGORY_COLORS = {
 }
 
 # UI Constants
-WINDOW_TITLE = "Habit Tracker"
+WINDOW_TITLE = "Growthly"
 WINDOW_MIN_WIDTH = 800
 WINDOW_MIN_HEIGHT = 600
 

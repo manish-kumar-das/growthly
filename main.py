@@ -1,5 +1,5 @@
 """
-Shim for Habit Tracker Application
+Shim for Growthly Application
 """
 import sys
 import os

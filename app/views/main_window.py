@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Habit Tracker")
+        self.setWindowTitle("Growthly - Build Your Best Self")
         self.setMinimumSize(1200, 800)
 
         self.habit_service = get_habit_service()

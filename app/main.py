@@ -1,5 +1,5 @@
 """
-Habit Tracker Application
+Growthly Application
 Main entry point
 """
 
@@ -24,7 +24,7 @@ def main():
 
     # Create application
     app = QApplication(sys.argv)
-    app.setApplicationName("Habit Tracker")
+    app.setApplicationName("Growthly")
 
     # Set default font
     app.setFont(QFont("SF Pro Display", 11))

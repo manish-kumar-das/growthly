@@ -1,14 +1,15 @@
-# 🎯 Habit Tracker
+# 🎯 Habit Tracker (Growthly)
 
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![PySide6](https://img.shields.io/badge/PySide6-6.5%2B-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/Version-1.0.0-orange)
 
-A simple, elegant, and powerful desktop application for tracking daily habits and building consistency.
+A powerful, elegant, and modern desktop application for tracking daily habits, achieving goals, and building consistency.
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Screenshots](#-screenshots) • [Roadmap](#-roadmap)
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Project Structure](#-project-structure) • [Roadmap](#-roadmap)
 
 </div>
 
@@ -16,12 +17,16 @@ A simple, elegant, and powerful desktop application for tracking daily habits an
 
 ## ✨ Features
 
-- ✅ **Track Daily Habits** - Add and manage your daily routines
-- 🔥 **Streak Tracking** - Visual streak counters to keep you motivated
-- 📊 **Statistics** - Monitor your completion rates and progress
-- 💾 **Local Storage** - Your data stays on your computer (SQLite database)
-- 🎨 **Clean Interface** - Modern, intuitive, and distraction-free design
-- ⚡ **Fast & Lightweight** - No bloat, just what you need
+- ✅ **Track Daily & Weekly Habits** - Efficiently manage your routines with categories and detailed descriptions.
+- 🔥 **Advanced Streak Tracking** - Monitor your consistency with real-time streak calculations and visual indicators.
+- 🎯 **Goal Management** - Set specific targets for streaks or total completions. Growthly tracks your progress automatically.
+- 📊 **Analytics Dashboard** - Visualize your progress with completion rate charts, weekly activity logs, and habit distribution donut charts.
+- 🌗 **Premium Theme System** - Seamlessly switch between Light and Dark modes with a modern, theme-aware UI.
+- 👤 **Profile Customization** - Personalized user experience with professional-grade circular avatar cropping and profile editing.
+- 🔔 **Smart Notifications** - Custom daily reminders and goal completion alerts to keep you on track.
+- 🗑️ **Trash & Restore** - Safely delete habits with the ability to restore them from the trash if you change your mind.
+- 🎨 **Modern Design** - Premium aesthetic featuring SF Pro typography, elegant layouts, and smooth micro-interactions.
+- 💾 **Local & Private** - Your data stays on your machine in a secure SQLite database.
 
 ---
 
@@ -41,9 +46,9 @@ cd habit-tracker
 
 2. **Create a virtual environment**
 ```bash
-# Windows (Git Bash)
+# Windows
 python -m venv venv
-source venv/Scripts/activate
+venv\Scripts\activate
 
 # Linux/Mac
 python3 -m venv venv
@@ -64,33 +69,20 @@ python main.py
 
 ## 📖 Usage
 
-### Adding a Habit
-1. Click the **"➕ Add New Habit"** button
-2. Enter the habit name (e.g., "Morning Exercise")
-3. Add an optional description
-4. Select frequency (Daily/Weekly)
-5. Click **"Create Habit"**
+### Adding & Managing Habits
+1. Click **"➕ Add New Habit"** to create a habit with category and frequency.
+2. Organise habits into **Categories** (e.g., Health, Work, Mindset).
+3. Easily **Edit** or **Delete** habits. Deleted habits can be recovered from the Trash.
 
-### Tracking Habits
-- ✅ Check the box next to a habit to mark it complete for today
-- ⬜ Uncheck to mark as incomplete
-- 🔥 Watch your streak counter grow!
+### Tracking Progress
+- **Check** the box next to a habit to complete it for today.
+- Use the **Analytics** tab to view deep-dive statistics of your performance.
+- Track your **Goals** to stay motivated and hit new milestones.
 
-### Managing Habits
-- 🗑️ Click the trash icon to delete a habit
-- 📋 Use **File → Refresh** to reload the habit list
-- 🔄 Data saves automatically
-
-### Viewing Progress
-- See your current streak next to each habit
-- Completed habits show a green checkmark
-- Streaks display with a 🔥 icon
-
----
-
-## 📸 Screenshots
-
-*Coming soon! Run the app to see it in action.*
+### Customization
+- Toggle between **Dark and Light mode** using the theme switch on the dashboard.
+- Update your **Profile** and avatar from the Profile section for a personalized experience.
+- Configure notification times in settings (Reminders).
 
 ---
 
@@ -98,60 +90,53 @@ python main.py
 ```
 habit-tracker/
 ├── app/
-│   ├── views/           # User interface components (Windows, Dialogs, Content)
-│   │   ├── main_window.py
-│   │   ├── dashboard_content_view.py
-│   │   └── sidebar.py
-│   ├── themes/          # Theme system (Dark/Light mode)
-│   │   ├── light_theme.py
-│   │   └── dark_theme.py
-│   ├── widgets/         # Reusable UI components
-│   │   └── theme_toggle.py
-│   ├── models/          # Data models
-│   ├── services/        # Business logic & services
-│   ├── db/              # Database layer
-│   ├── utils/           # Utility functions
-│   └── assets/          # Icons and styles
-├── data/                # SQLite database storage
-├── docs/                # Documentation
-├── main.py              # Application entry point (Shim)
-├── requirements.txt     # Python dependencies
+│   ├── views/           # UI components (Windows, Dialogs, Content Views)
+│   ├── themes/          # Modern theme system (Dark/Light schemas)
+│   ├── widgets/         # Custom, reusable UI elements
+│   ├── models/          # Data models (Habit, Goal, Profile)
+│   ├── services/        # Business logic (HabitService, GoalService, etc.)
+│   ├── db/              # Database interaction layer
+│   ├── utils/           # Helper functions & Image processing
+│   └── assets/          # Icons, fonts, and static assets
+├── data/                # Database and user profile storage
+├── docs/                # Extended documentation and roadmap
+├── main.py              # Application entry point
+├── requirements.txt     # Dependencies
 └── README.md
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ Tech Stack
 
-- **Language:** Python 3.8+
-- **GUI Framework:** PySide6 (Qt for Python)
-- **Database:** SQLite3
-- **Architecture:** MVC (Model-View-Controller)
+- **GUI:** PySide6 (Qt for Python)
+- **Database:** SQLite
+- **Styling:** Dynamic Theme Engine
+- **Image Processing:** OpenCV/PIL for avatar cropping
 
 ---
 
 ## 🗺️ Roadmap
 
-See [docs/roadmap.md](docs/roadmap.md) for detailed future plans.
+**Recently Completed (v1.0.0):**
+- [x] Full Dark Mode support
+- [x] Goal tracking system
+- [x] Analytics dashboard with charts
+- [x] Profile management and avatar cropping
+- [x] Categories and habit management
+- [x] Daily reminders and notification engine
 
 **Coming Soon:**
-- 📊 Advanced statistics dashboard
-- 🎨 Dark mode
-- 📁 Data export/import
-- 🔔 Reminders and notifications
-- 📱 Mobile companion app
+- [ ] Data Export/Import (CSV, JSON)
+- [ ] Calendar heatmap view
+- [ ] Weekly/Monthly trend analysis
+- [ ] Desktop widgets
+- [ ] Multi-user support
 
 ---
 
 ## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ---
 
@@ -176,7 +161,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Manish Kumar Das**
 - GitHub: [@manish-kumar-das](https://github.com/manish-kumar-das)
-- Email: manishkumardas7890@gmail.com
+- Email: [manishkumardas7890@gmail.com](mailto:manishkumardas7890@gmail.com)
 
 ---
 

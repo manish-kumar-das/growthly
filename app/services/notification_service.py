@@ -28,7 +28,7 @@ class NotificationService:
                 result = subprocess.run(
                     [
                         "notify-send",
-                        "--app-name=Habit Tracker",
+                        "--app-name=Growthly",
                         "--icon=dialog-information",
                         title,
                         message,
