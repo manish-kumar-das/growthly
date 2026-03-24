@@ -1,11 +1,6 @@
-"""
-Premium Dashboard View - ALL ISSUES FIXED
-"""
 import logging
-logger = logging.getLogger(__name__)
-
-
 import os
+from datetime import datetime, timedelta
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -26,7 +21,6 @@ from PySide6.QtGui import (
     QLinearGradient,
     QRadialGradient,
 )
-from datetime import datetime, timedelta
 from app.services.habit_service import get_habit_service
 from app.services.profile_service import get_profile_service
 from app.services.settings_service import get_settings_service
@@ -34,12 +28,14 @@ from app.themes import get_theme_manager
 from app.widgets.theme_toggle import AnimatedThemeToggle
 from app.services.streak_service import get_streak_service
 
+logger = logging.getLogger(__name__)
+
 
 class SimpleCircularProgress(QWidget):
     def __init__(self, percentage=0, parent=None):
         super().__init__(parent)
         self.percentage = percentage
-        self.setFixedSize(240, 240)
+        self.setMinimumSize(220, 220)
         from app.themes import get_theme_manager
         self.theme_manager = get_theme_manager()
 
@@ -53,7 +49,7 @@ class SimpleCircularProgress(QWidget):
 
         center_x = self.width() // 2
         center_y = self.height() // 2
-        radius = 85
+        radius = min(center_x, center_y) - 30
 
         rect = QRectF(center_x - radius, center_y - radius, radius * 2, radius * 2)
 
@@ -474,8 +470,9 @@ class WeekDayCard(QWidget):
         self.setup_ui(day_name, percentage, day_number)
 
     def setup_ui(self, day_name, percentage, day_number):
-        self.setFixedWidth(135)
-
+        self.setMinimumWidth(80)
+        self.setMaximumWidth(150)
+        
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(10)
@@ -484,7 +481,8 @@ class WeekDayCard(QWidget):
         # CARD
         card = QFrame()
         card.setObjectName("weekDayCard")
-        card.setFixedSize(135, 190)
+        card.setMinimumSize(100, 180)
+        card.setMaximumSize(150, 220)
 
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
         if percentage > 0:
@@ -863,8 +861,9 @@ class DashboardContentView(QWidget):
 
         # Daily Completion
         daily_card = QFrame()
-        daily_card.setFixedWidth(380)
-        daily_card.setFixedHeight(448)
+        daily_card.setMinimumWidth(320)
+        daily_card.setMaximumWidth(450)
+        daily_card.setMinimumHeight(448)
         is_dark = self.theme_manager.is_dark_mode()
         daily_card.setStyleSheet(f"""
             QFrame {{
@@ -904,7 +903,7 @@ class DashboardContentView(QWidget):
         # Today's Habits
         habits_card = QFrame()
         habits_card.setObjectName("todayCard")
-        habits_card.setFixedHeight(448)
+        habits_card.setMinimumHeight(448)
         is_dark = self.theme_manager.is_dark_mode()
         habits_card.setStyleSheet(f"""
             QFrame#todayCard {{
@@ -1024,7 +1023,7 @@ class DashboardContentView(QWidget):
                 border-radius: 20px;
             }}
         """)
-        weekly_card.setFixedHeight(348)
+        weekly_card.setMinimumHeight(348)
 
         weekly_layout = QVBoxLayout(weekly_card)
         weekly_layout.setContentsMargins(30, 28, 30, 28)
@@ -1061,7 +1060,7 @@ class DashboardContentView(QWidget):
         bottom_row.addWidget(weekly_card, stretch=2)
 
         milestone_card = QFrame()
-        milestone_card.setFixedHeight(348)
+        milestone_card.setMinimumHeight(348)
         is_dark = self.theme_manager.is_dark_mode()
         # Saturated brand colors for dark mode consistent with analytics
         s_start = "#5069f2" if is_dark else "#667eea"
@@ -1077,9 +1076,8 @@ class DashboardContentView(QWidget):
             }}
         """)
         milestone_card.setObjectName("streakCard")
-        milestone_card.setMinimumWidth(
-            380
-        )  # Ensure enough space for large numbers (100+)
+        milestone_card.setMinimumWidth(340)
+        milestone_card.setMaximumWidth(480)
         self.milestone_card = milestone_card
 
         streak_card_shadow = QGraphicsDropShadowEffect()

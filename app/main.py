@@ -17,14 +17,29 @@ from app.db.database import init_db
 from app.views.main_window import MainWindow
 
 
+from PySide6.QtCore import Qt
+
 def main():
     """Main application entry point"""
     # Initialize database
     init_db()
 
+    # Set High DPI Factor Rounding Policy BEFORE creating QApplication
+    if hasattr(Qt, 'HighDpiScaleFactorRoundingPolicy'):
+        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
     # Create application
     app = QApplication(sys.argv)
     app.setApplicationName("Growthly")
+
+    # Handle High DPI Scaling attributes for Qt 5 style (safe in Qt 6)
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
+    # Force Fusion style for consistent cross-platform appearance
+    app.setStyle("Fusion")
 
     # Set default font
     app.setFont(QFont("SF Pro Display", 11))
