@@ -481,8 +481,11 @@ class WeekDayCard(QWidget):
         # CARD
         card = QFrame()
         card.setObjectName("weekDayCard")
-        card.setMinimumSize(100, 180)
-        card.setMaximumSize(150, 220)
+        # Use consistent card heights across platforms
+        card_min_h = 180
+        card_max_h = 220
+        card.setMinimumSize(100, card_min_h)
+        card.setMaximumSize(150, card_max_h)
 
         is_dark = getattr(self, "theme_manager", None) and self.theme_manager.is_dark_mode()
         if percentage > 0:
@@ -702,7 +705,8 @@ class DashboardContentView(QWidget):
         """)
 
         navbar_layout = QHBoxLayout(self.navbar)
-        navbar_layout.setContentsMargins(40, 24, 40, 24)
+        nv_margin = 24
+        navbar_layout.setContentsMargins(40, nv_margin, 40, nv_margin)
 
         # Greeting
         greeting_container = QHBoxLayout()
@@ -852,8 +856,12 @@ class DashboardContentView(QWidget):
 
         content = QWidget()
         content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(36, 28, 36, 28)
-        content_layout.setSpacing(24)
+        # Use consistent content margins and spacing across platforms
+        c_margin_v = 28
+        c_margin_h = 36
+        c_spacing = 24
+        content_layout.setContentsMargins(c_margin_h, c_margin_v, c_margin_h, c_margin_v)
+        content_layout.setSpacing(c_spacing)
 
         # Top row
         top_row = QHBoxLayout()

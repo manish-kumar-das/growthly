@@ -41,8 +41,10 @@ def main():
     # Force Fusion style for consistent cross-platform appearance
     app.setStyle("Fusion")
 
-    # Set default font
-    app.setFont(QFont("SF Pro Display", 11))
+    # Set default font with high-quality fallbacks
+    app_font = QFont("SF Pro Display", 11)
+    app_font.setFamilies(["SF Pro Display", "Segoe UI", "Arial", "sans-serif"])
+    app.setFont(app_font)
 
     # Simple light theme for HabitHub UI
     app.setStyleSheet("""
